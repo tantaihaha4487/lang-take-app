@@ -1,4 +1,4 @@
-package com.example.lang_take
+package net.thanachot.lang_take
 
 import io.flutter.embedding.android.FlutterActivity
 

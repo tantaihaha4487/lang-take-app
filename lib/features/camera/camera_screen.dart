@@ -27,6 +27,19 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
   double _baseScale = 1.0;
 
   final ImagePicker _imagePicker = ImagePicker();
+  
+  final List<String> _languages = [
+    'English',
+    'Spanish',
+    'Japanese',
+    'French',
+    'German',
+    'Italian',
+    'Chinese',
+    'Korean',
+    'Russian',
+    'Portuguese',
+  ];
 
   @override
   void initState() {
@@ -36,7 +49,6 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
   }
 
   Future<void> _initCamera() async {
-    // Check if running on Linux (camera plugin has limited Linux support)
     if (!kIsWeb && Platform.isLinux) {
       debugPrint('CameraScreen: Camera has limited support on Linux. Using image picker as fallback.');
     }
@@ -62,7 +74,6 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
           });
         }
       } else {
-        // No cameras available
         if (mounted) {
           setState(() {
             _cameraNotSupported = true;
@@ -164,15 +175,288 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
   @override
   Widget build(BuildContext context) {
     final cameraState = ref.watch(cameraViewModelProvider);
+    final viewModel = ref.read(cameraViewModelProvider.notifier);
 
-    // Show fallback UI when camera is not supported (e.g., on Linux)
+    // Fallback UI for Linux/No Camera
     if (_cameraNotSupported) {
-      return Scaffold(
+      return _buildFallbackUI(cameraState, viewModel);
+    }
+
+    // Loading State
+    if (!_isCameraInitialized || _controller == null) {
+      return const Scaffold(
         backgroundColor: Colors.black,
-        body: Center(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Layer 1: Camera Preview or Captured Image
+          if (cameraState.isReviewing && cameraState.capturedImage != null)
+            Image.memory(cameraState.capturedImage!, fit: BoxFit.cover)
+          else
+            GestureDetector(
+              onScaleStart: _handleScaleStart,
+              onScaleUpdate: _handleScaleUpdate,
+              onTapUp: _onTapUp,
+              child: CameraPreview(_controller!),
+            ),
+          
+          // Layer 2: UI Overlays
+          SafeArea(
+            child: Column(
+              children: [
+                // Top Bar: Language Selector
+                _buildTopBar(cameraState, viewModel),
+                
+                const Spacer(),
+                
+                // Bottom Area: Controls or Results
+                if (cameraState.isAnalyzing)
+                  _buildLoadingIndicator()
+                else if (cameraState.identifiedResult != null)
+                  _buildResultCard(cameraState, viewModel)
+                else if (cameraState.isReviewing)
+                  _buildReviewControls(viewModel)
+                else
+                  _buildCaptureControl(viewModel),
+              ],
+            ),
+          ),
+          
+          // Error Message Toast
+          if (cameraState.errorMessage != null)
+            Positioned(
+              top: 100,
+              left: 20,
+              right: 20,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  cameraState.errorMessage!,
+                  style: const TextStyle(color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopBar(CameraState state, CameraViewModel viewModel) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.only(top: 8),
+      decoration: BoxDecoration(
+        color: Colors.black54,
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'I want to learn: ',
+            style: TextStyle(color: Colors.white70, fontSize: 16),
+          ),
+          DropdownButton<String>(
+            value: state.targetLanguage,
+            dropdownColor: Colors.grey[900],
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+            underline: Container(),
+            icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+            items: _languages.map((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              if (newValue != null) {
+                viewModel.setTargetLanguage(newValue);
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCaptureControl(CameraViewModel viewModel) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 30),
+      child: GestureDetector(
+        onTap: () => viewModel.capture(_controller!),
+        child: Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 4),
+            color: Colors.white24,
+          ),
+          child: Center(
+            child: Container(
+              width: 60,
+              height: 60,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReviewControls(CameraViewModel viewModel) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 40, left: 20, right: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          ElevatedButton.icon(
+            onPressed: viewModel.retake,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Retake'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white24,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+          ElevatedButton.icon(
+            onPressed: viewModel.identify,
+            icon: const Icon(Icons.auto_awesome),
+            label: const Text('Identify'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return const Padding(
+      padding: EdgeInsets.only(bottom: 50),
+      child: Column(
+        children: [
+          CircularProgressIndicator(color: Colors.white),
+          SizedBox(height: 16),
+          Text(
+            'Analyzing...',
+            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResultCard(CameraState state, CameraViewModel viewModel, {VoidCallback? onNewCapture}) {
+    final result = state.identifiedResult;
+    if (result == null) return const SizedBox.shrink();
+
+    final subject = result['subject'] ?? 'Unknown';
+    final language = result['language'] ?? state.targetLanguage;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            language.toUpperCase(),
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subject,
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                onPressed: viewModel.speakResult,
+                icon: const Icon(Icons.volume_up_rounded),
+                iconSize: 32,
+                color: Colors.blueAccent,
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.blueAccent.withOpacity(0.1),
+                  padding: const EdgeInsets.all(12),
+                ),
+              ),
+              const SizedBox(width: 16),
+              ElevatedButton(
+                onPressed: onNewCapture ?? viewModel.retake,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+                child: const Text('New Capture'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFallbackUI(CameraState state, CameraViewModel viewModel) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Center(
+        child: SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+               // Top Bar for fallback
+              _buildTopBar(state, viewModel),
+              const SizedBox(height: 40),
+              
+              // 1. No Image: Show Picker
+              if (state.capturedImage == null)
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
@@ -200,8 +484,8 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
-                      onPressed: cameraState.isAnalyzing ? null : _pickImage,
-                      icon: cameraState.isAnalyzing 
+                      onPressed: state.isAnalyzing ? null : _pickImage,
+                      icon: state.isAnalyzing 
                           ? const SizedBox(
                               width: 20,
                               height: 20,
@@ -211,7 +495,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                               ),
                             )
                           : const Icon(Icons.photo_library),
-                      label: Text(cameraState.isAnalyzing ? 'Analyzing...' : 'Pick from Gallery'),
+                      label: Text(state.isAnalyzing ? 'Analyzing...' : 'Pick from Gallery'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: Colors.black,
@@ -224,132 +508,43 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                   ],
                 ),
               ),
-              // Show captured image and result if available
-              if (cameraState.capturedImage != null) ...[
+
+              // 2. Image Exists: Show Image
+              if (state.capturedImage != null) ...[
                 const SizedBox(height: 24),
                 Container(
-                  constraints: const BoxConstraints(maxWidth: 300, maxHeight: 200),
+                  constraints: const BoxConstraints(maxWidth: 300, maxHeight: 300),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.white24),
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.memory(cameraState.capturedImage!, fit: BoxFit.cover),
+                    child: Image.memory(state.capturedImage!, fit: BoxFit.contain),
                   ),
                 ),
+                const SizedBox(height: 24),
               ],
-              if (cameraState.resultText != null && cameraState.resultText!.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Container(
-                  constraints: const BoxConstraints(maxWidth: 350),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    cameraState.resultText!,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextButton.icon(
-                  onPressed: () {
-                    ref.read(cameraViewModelProvider.notifier).reset();
-                  },
-                  icon: const Icon(Icons.refresh, color: Colors.white70),
-                  label: const Text('Analyze Another', style: TextStyle(color: Colors.white70)),
-                ),
+
+              // 3. Action Area based on state
+              if (state.capturedImage != null) ...[
+                if (state.isAnalyzing)
+                  _buildLoadingIndicator()
+                else if (state.identifiedResult != null)
+                  _buildResultCard(
+                    state, 
+                    viewModel,
+                    onNewCapture: () {
+                      viewModel.retake();
+                      _pickImage();
+                    },
+                  )
+                else
+                  _buildReviewControls(viewModel),
               ],
             ],
           ),
         ),
-      );
-    }
-
-    // Still loading camera
-    if (!_isCameraInitialized || _controller == null) {
-      return const Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (cameraState.capturedImage != null)
-            Image.memory(cameraState.capturedImage!, fit: BoxFit.cover)
-          else
-            GestureDetector(
-              onScaleStart: _handleScaleStart,
-              onScaleUpdate: _handleScaleUpdate,
-              onTapUp: _onTapUp,
-              child: CameraPreview(_controller!),
-            ),
-            
-          // Result Overlay
-            
-          // Result Overlay
-          if (cameraState.resultText != null && cameraState.resultText!.isNotEmpty)
-             Positioned(
-               bottom: 100,
-               left: 20,
-               right: 20,
-               child: Container(
-                 padding: const EdgeInsets.all(16),
-                 decoration: BoxDecoration(
-                   color: Colors.black.withOpacity(0.7),
-                   borderRadius: BorderRadius.circular(16),
-                 ),
-                 child: SingleChildScrollView(
-                   child: Text(
-                     cameraState.resultText!,
-                     style: const TextStyle(color: Colors.white, fontSize: 16),
-                   ),
-                 ),
-               ),
-             ),
-
-          // Capture Button
-          if (cameraState.capturedImage == null)
-          Positioned(
-            bottom: 30,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: FloatingActionButton(
-                onPressed: () {
-                  ref.read(cameraViewModelProvider.notifier).captureAndAnalyze(_controller!);
-                },
-                backgroundColor: Colors.white,
-                child: cameraState.isAnalyzing 
-                  ? const Padding(
-                      padding: EdgeInsets.all(12.0),
-                      child: CircularProgressIndicator(color: Colors.black),
-                    ) 
-                  : const Icon(Icons.camera_alt, color: Colors.black),
-              ),
-            ),
-          ),
-          
-          // Reset Button
-          if (cameraState.capturedImage != null && !cameraState.isAnalyzing)
-             Positioned(
-               top: 40,
-               left: 20,
-               child: IconButton(
-                 icon: const Icon(Icons.close, color: Colors.white, size: 30),
-                 onPressed: () {
-                   ref.read(cameraViewModelProvider.notifier).reset();
-                 },
-               ),
-             ),
-        ],
       ),
     );
   }

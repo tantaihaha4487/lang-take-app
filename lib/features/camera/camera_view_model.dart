@@ -21,23 +21,35 @@ final cameraViewModelProvider = StateNotifierProvider<CameraViewModel, CameraSta
 
 class CameraState {
   final bool isAnalyzing;
-  final String? resultText;
+  final bool isReviewing;
+  final String targetLanguage;
+  final Map<String, dynamic>? identifiedResult;
+  final String? errorMessage;
   final Uint8List? capturedImage;
 
   CameraState({
     this.isAnalyzing = false,
-    this.resultText,
+    this.isReviewing = false,
+    this.targetLanguage = 'Spanish',
+    this.identifiedResult,
+    this.errorMessage,
     this.capturedImage,
   });
 
   CameraState copyWith({
     bool? isAnalyzing,
-    String? resultText,
+    bool? isReviewing,
+    String? targetLanguage,
+    Map<String, dynamic>? identifiedResult,
+    String? errorMessage,
     Uint8List? capturedImage,
   }) {
     return CameraState(
       isAnalyzing: isAnalyzing ?? this.isAnalyzing,
-      resultText: resultText ?? this.resultText,
+      isReviewing: isReviewing ?? this.isReviewing,
+      targetLanguage: targetLanguage ?? this.targetLanguage,
+      identifiedResult: identifiedResult ?? this.identifiedResult,
+      errorMessage: errorMessage ?? this.errorMessage,
       capturedImage: capturedImage ?? this.capturedImage,
     );
   }
@@ -52,70 +64,95 @@ class CameraViewModel extends StateNotifier<CameraState> {
 
   CameraViewModel(this._geminiService, this._imageService, this._ttsService, this._historyRepository) : super(CameraState());
 
-  Future<void> captureAndAnalyze(CameraController controller) async {
-    if (state.isAnalyzing) return;
+  void setTargetLanguage(String language) {
+    state = state.copyWith(targetLanguage: language);
+  }
 
+  Future<void> capture(CameraController controller) async {
     try {
       final file = await controller.takePicture();
       final bytes = await file.readAsBytes();
+      
+      // Switch to review mode with the captured image
+      state = state.copyWith(
+        capturedImage: bytes,
+        isReviewing: true,
+        identifiedResult: null,
+        errorMessage: null,
+      );
+    } catch (e) {
+      state = state.copyWith(errorMessage: 'Error capturing: $e');
+    }
+  }
 
-      state = state.copyWith(isAnalyzing: true, capturedImage: bytes, resultText: '');
+  void retake() {
+    state = state.copyWith(
+      capturedImage: null,
+      isReviewing: false,
+      identifiedResult: null,
+      errorMessage: null,
+    );
+  }
 
-      final compressedBytes = await _imageService.compressImage(bytes);
+  Future<void> identify() async {
+    if (state.capturedImage == null || state.isAnalyzing) return;
 
-      _geminiService.analyzeImage(compressedBytes).listen((text) {
-        state = state.copyWith(resultText: (state.resultText ?? '') + text);
-      }, onDone: () {
-        state = state.copyWith(isAnalyzing: false);
-        _speakResult(state.resultText ?? '');
-        _saveResult(state.resultText ?? '');
-      }, onError: (e) {
-        state = state.copyWith(isAnalyzing: false, resultText: 'Error: $e');
-      });
+    try {
+      state = state.copyWith(isAnalyzing: true, errorMessage: null);
+
+      final compressedBytes = await _imageService.compressImage(state.capturedImage!);
+
+      final result = await _geminiService.identifyObject(
+        compressedBytes,
+        state.targetLanguage,
+      );
+
+      state = state.copyWith(
+        isAnalyzing: false,
+        identifiedResult: result,
+      );
+      
+      // Auto-play pronunciation if available or just the word
+      if (result.containsKey('subject')) {
+        _speak(result['subject']);
+        _saveResult(result);
+      }
 
     } catch (e) {
-      state = state.copyWith(isAnalyzing: false, resultText: 'Error capturing: $e');
+      state = state.copyWith(
+        isAnalyzing: false,
+        errorMessage: 'Error identifying: $e',
+      );
     }
   }
 
   /// Analyze an image from bytes (e.g., from image picker)
   Future<void> analyzeFromBytes(Uint8List bytes) async {
-    if (state.isAnalyzing) return;
-
-    try {
-      state = state.copyWith(isAnalyzing: true, capturedImage: bytes, resultText: '');
-
-      final compressedBytes = await _imageService.compressImage(bytes);
-
-      _geminiService.analyzeImage(compressedBytes).listen((text) {
-        state = state.copyWith(resultText: (state.resultText ?? '') + text);
-      }, onDone: () {
-        state = state.copyWith(isAnalyzing: false);
-        _speakResult(state.resultText ?? '');
-        _saveResult(state.resultText ?? '');
-      }, onError: (e) {
-        state = state.copyWith(isAnalyzing: false, resultText: 'Error: $e');
-      });
-    } catch (e) {
-      state = state.copyWith(isAnalyzing: false, resultText: 'Error analyzing: $e');
-    }
+    // For image picker, we go straight to review mode
+    state = state.copyWith(
+      capturedImage: bytes,
+      isReviewing: true,
+      identifiedResult: null,
+      errorMessage: null,
+    );
   }
   
-  void _speakResult(String text) {
-    final nameMatch = RegExp(r"Name: (.*)").firstMatch(text);
-    if (nameMatch != null) {
-      _ttsService.speak(nameMatch.group(1)!);
+  void speakResult() {
+    if (state.identifiedResult != null && state.identifiedResult!.containsKey('subject')) {
+      _speak(state.identifiedResult!['subject']);
     }
   }
 
-  Future<void> _saveResult(String text) async {
+  void _speak(String text) {
+    _ttsService.speak(text);
+  }
+
+  Future<void> _saveResult(Map<String, dynamic> result) async {
     if (state.capturedImage == null) return;
 
-    final name = RegExp(r"Name: (.*)").firstMatch(text)?.group(1) ?? 'Unknown';
-    final pronunciation = RegExp(r"Pronunciation: (.*)").firstMatch(text)?.group(1) ?? '';
-    final translation = RegExp(r"Translation: (.*)").firstMatch(text)?.group(1) ?? '';
-    final description = RegExp(r"Description: (.*)").firstMatch(text)?.group(1) ?? '';
-
+    final name = result['subject'] ?? 'Unknown';
+    final language = result['language'] ?? state.targetLanguage;
+    
     try {
       final dir = await getApplicationDocumentsDirectory();
       final imagePath = '${dir.path}/${_uuid.v4()}.jpg';
@@ -125,16 +162,15 @@ class CameraViewModel extends StateNotifier<CameraState> {
       final item = HistoryItem(
         id: _uuid.v4(),
         name: name,
-        pronunciation: pronunciation,
-        translation: translation,
-        description: description,
+        pronunciation: '', // Not provided in simple JSON
+        translation: language, // Using translation field for language label for now
+        description: 'Identified as $name in $language',
         timestamp: DateTime.now(),
         imagePath: imagePath,
       );
 
       await _historyRepository.saveHistoryItem(item);
     } catch (e) {
-      // Handle save error silently or log
       print('Error saving history: $e');
     }
   }
