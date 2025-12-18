@@ -144,7 +144,7 @@ class CameraViewModel extends StateNotifier<CameraState> {
   }
 
   void _speak(String text) {
-    _ttsService.speak(text);
+    _ttsService.speak(text, language: state.targetLanguage);
   }
 
   Future<void> _saveResult(Map<String, dynamic> result) async {
@@ -175,6 +175,17 @@ class CameraViewModel extends StateNotifier<CameraState> {
     }
   }
   
+  void resetResultOnly() {
+    state = CameraState(
+      isAnalyzing: state.isAnalyzing,
+      isReviewing: state.isReviewing,
+      targetLanguage: state.targetLanguage,
+      identifiedResult: null,
+      errorMessage: state.errorMessage,
+      capturedImage: state.capturedImage,
+    );
+  }
+
   void reset() {
     state = CameraState();
   }

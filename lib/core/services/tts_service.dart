@@ -32,13 +32,30 @@ class TtsService {
     }
   }
 
-  Future<void> speak(String text) async {
+  final Map<String, String> _languageCodes = {
+    'English': 'en-US',
+    'Spanish': 'es-ES',
+    'Japanese': 'ja-JP',
+    'French': 'fr-FR',
+    'German': 'de-DE',
+    'Italian': 'it-IT',
+    'Chinese': 'zh-CN',
+    'Korean': 'ko-KR',
+    'Russian': 'ru-RU',
+    'Portuguese': 'pt-BR',
+  };
+
+  Future<void> speak(String text, {String? language}) async {
     if (!_isSupported || _flutterTts == null) {
-      debugPrint('TtsService: Would speak: "$text" (TTS not available on this platform)');
+      debugPrint('TtsService: Would speak: "$text" in $language (TTS not available on this platform)');
       return;
     }
     
     try {
+      if (language != null) {
+        final code = _languageCodes[language] ?? 'en-US';
+        await _flutterTts!.setLanguage(code);
+      }
       await _flutterTts!.speak(text);
     } catch (e) {
       debugPrint('TtsService: Error speaking: $e');
