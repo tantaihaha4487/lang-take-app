@@ -10,6 +10,8 @@ import 'package:image_picker/image_picker.dart';
 import 'camera_view_model.dart';
 import '../../core/constants/language_config.dart';
 import '../../core/services/settings_service.dart';
+import '../../core/widgets/interactive_glass_container.dart';
+
 
 
 
@@ -265,60 +267,51 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
   }
 
   Widget _buildTopBar(CameraState state, CameraViewModel viewModel) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(30),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          margin: const EdgeInsets.only(top: 8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: Colors.white.withOpacity(0.2)),
+    return InteractiveGlassContainer(
+      borderRadius: 30,
+      blur: 15,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'I want to learn: ',
+            style: TextStyle(color: Colors.white70, fontSize: 16),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'I want to learn: ',
-                style: TextStyle(color: Colors.white70, fontSize: 16),
-              ),
-              DropdownButton<String>(
-                value: state.targetLanguage,
-                dropdownColor: Colors.black.withOpacity(0.8),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                underline: Container(),
-                icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-                items: LanguageConfig.supportedLanguages.map((AppLanguage lang) {
-                  return DropdownMenuItem<String>(
-                    value: lang.name,
-                    child: Row(
-                      children: [
-                        Text(lang.flag),
-                        const SizedBox(width: 8),
-                        Text(lang.name),
-                      ],
-                    ),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  if (newValue != null) {
-                    viewModel.setTargetLanguage(newValue);
-                  }
-                },
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.settings, color: Colors.white70),
-                onPressed: () => _showSettingsDialog(context),
-              ),
-            ],
+          DropdownButton<String>(
+            value: state.targetLanguage,
+            dropdownColor: Colors.black.withOpacity(0.8),
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+            underline: Container(),
+            icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+            items: LanguageConfig.supportedLanguages.map((AppLanguage lang) {
+              return DropdownMenuItem<String>(
+                value: lang.name,
+                child: Row(
+                  children: [
+                    Text(lang.flag),
+                    const SizedBox(width: 8),
+                    Text(lang.name),
+                  ],
+                ),
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              if (newValue != null) {
+                viewModel.setTargetLanguage(newValue);
+              }
+            },
           ),
-        ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white70),
+            onPressed: () => _showSettingsDialog(context),
+          ),
+        ],
       ),
     );
   }
+
 
 
   void _showSettingsDialog(BuildContext context) {
@@ -376,8 +369,12 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
   Widget _buildCaptureControl(CameraViewModel viewModel) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 30),
-      child: GestureDetector(
+      child: InteractiveGlassContainer(
         onTap: () => viewModel.capture(_controller!),
+        borderRadius: 45,
+        blur: 5,
+        scaleOnTap: 0.85,
+        color: Colors.white.withOpacity(0.1),
         child: Container(
           width: 90,
           height: 90,
@@ -392,37 +389,14 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
               ],
             ),
             border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 15,
-                spreadRadius: 5,
-              ),
-            ],
           ),
           child: Center(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(45),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                child: Container(
-                  width: 70,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.2),
-                  ),
-                  child: Center(
-                    child: Container(
-                      width: 55,
-                      height: 55,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
+            child: Container(
+              width: 55,
+              height: 55,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
               ),
             ),
           ),
@@ -430,6 +404,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
       ),
     );
   }
+
 
 
   Widget _buildReviewControls(CameraViewModel viewModel) {
@@ -464,30 +439,30 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
     required String label,
     required bool isPrimary,
   }) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          decoration: BoxDecoration(
-            color: isPrimary ? Colors.white.withOpacity(0.9) : Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withOpacity(0.2)),
-          ),
-          child: ElevatedButton.icon(
-            onPressed: onPressed,
-            icon: Icon(icon, color: isPrimary ? Colors.black : Colors.white),
-            label: Text(label, style: TextStyle(color: isPrimary ? Colors.black : Colors.white)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    return InteractiveGlassContainer(
+      onTap: onPressed,
+      borderRadius: 20,
+      color: isPrimary ? Colors.white.withOpacity(0.9) : Colors.white.withOpacity(0.1),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: isPrimary ? Colors.black : Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isPrimary ? Colors.black : Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
+
 
 
   Widget _buildLoadingIndicator() {
@@ -610,25 +585,14 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
   }
 
   Widget _buildGlassIconButton({required VoidCallback onPressed, required IconData icon}) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(15),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: Colors.white.withOpacity(0.2)),
-          ),
-          child: IconButton(
-            onPressed: onPressed,
-            icon: Icon(icon, color: Colors.white),
-            iconSize: 28,
-          ),
-        ),
-      ),
+    return InteractiveGlassContainer(
+      onTap: onPressed,
+      borderRadius: 15,
+      padding: const EdgeInsets.all(12),
+      child: Icon(icon, color: Colors.white, size: 28),
     );
   }
+
 
 
   Widget _buildFallbackUI(CameraState state, CameraViewModel viewModel) {

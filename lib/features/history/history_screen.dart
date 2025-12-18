@@ -7,6 +7,8 @@ import '../../data/models/image_record.dart';
 import '../../data/repositories/history_repository.dart';
 import '../../core/services/tts_service.dart';
 import '../../core/constants/language_config.dart';
+import '../../core/widgets/interactive_glass_container.dart';
+
 
 
 final historyProvider = StreamProvider<List<ImageRecord>>((ref) {
@@ -137,157 +139,133 @@ class _HistoryCard extends ConsumerWidget {
           ),
         );
       },
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withOpacity(0.2)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 1. Image Area
-                Expanded(
-                  flex: 3,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.file(
-                        File(record.imagePath),
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.white.withOpacity(0.05),
-                            child: const Icon(Icons.broken_image, color: Colors.white24),
-                          );
-                        },
-                      ),
-                      // 2. Language Badge
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.4),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.white.withOpacity(0.1)),
+      child: InteractiveGlassContainer(
+        onTap: () {
+          ttsService.speak(record.subject, language: record.language);
+        },
+        borderRadius: 24,
+        blur: 10,
+        scaleOnTap: 0.96,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. Image Area
+            Expanded(
+              flex: 3,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.file(
+                    File(record.imagePath),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.white.withOpacity(0.05),
+                        child: const Icon(Icons.broken_image, color: Colors.white24),
+                      );
+                    },
+                  ),
+                  // 2. Language Badge
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.4),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white.withOpacity(0.1)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                LanguageConfig.supportedLanguages
+                                    .firstWhere((l) => l.name == record.language,
+                                        orElse: () => LanguageConfig.supportedLanguages.first)
+                                    .flag,
+                                style: const TextStyle(fontSize: 10),
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    LanguageConfig.supportedLanguages
-                                        .firstWhere((l) => l.name == record.language,
-                                            orElse: () => LanguageConfig.supportedLanguages.first)
-                                        .flag,
-                                    style: const TextStyle(fontSize: 10),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    record.language,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+                              const SizedBox(width: 4),
+                              Text(
+                                record.language,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                
-                // 3. Content Area
-                Expanded(
-                  flex: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    record.subject,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold, 
-                                      fontSize: 16,
-                                      color: Colors.white,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  if (record.translation != null)
-                                    Text(
-                                      record.translation!,
-                                      style: TextStyle(
-                                        color: Colors.white.withOpacity(0.6),
-                                        fontSize: 12,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                ],
-                              ),
-                            ),
-
-                            // 4. Audio Button
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: BackdropFilter(
-                                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: Colors.white.withOpacity(0.1)),
-                                  ),
-                                  child: IconButton(
-                                    icon: const Icon(Icons.volume_up, color: Colors.white, size: 18),
-                                    onPressed: () {
-                                      ttsService.speak(record.subject, language: record.language);
-                                    },
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                  ),
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
-                        // 5. Date
-                        Text(
-                          "${record.createdAt.day}/${record.createdAt.month}/${record.createdAt.year}",
-                          style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10),
-                        ),
-                      ],
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+            
+            // 3. Content Area
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                record.subject,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold, 
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (record.translation != null)
+                                Text(
+                                  record.translation!,
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.6),
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
+                          ),
+                        ),
+
+                        // 4. Audio Button (Now redundant as card is clickable, but kept for visual)
+                        Icon(Icons.volume_up, color: Colors.white.withOpacity(0.5), size: 18),
+                      ],
+                    ),
+                    // 5. Date
+                    Text(
+                      "${record.createdAt.day}/${record.createdAt.month}/${record.createdAt.year}",
+                      style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
+
 
   }
 }
