@@ -8,6 +8,8 @@ import '../../data/repositories/history_repository.dart';
 import '../../core/services/tts_service.dart';
 import '../../core/constants/language_config.dart';
 import '../../core/widgets/interactive_glass_container.dart';
+import '../../core/providers/navigation_provider.dart';
+
 
 
 
@@ -17,7 +19,9 @@ final historyProvider = StreamProvider<List<ImageRecord>>((ref) {
 });
 
 
+
 class HistoryScreen extends ConsumerWidget {
+
   const HistoryScreen({Key? key}) : super(key: key);
 
   @override
@@ -32,6 +36,10 @@ class HistoryScreen extends ConsumerWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.camera_alt_outlined),
+                onPressed: () => ref.read(navigationIndexProvider.notifier).state = 0,
+              ),
               title: const Text(
                 "Your Collection",
                 style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
@@ -44,6 +52,7 @@ class HistoryScreen extends ConsumerWidget {
           ),
         ),
       ),
+
       body: Stack(
         children: [
           // Background Gradient

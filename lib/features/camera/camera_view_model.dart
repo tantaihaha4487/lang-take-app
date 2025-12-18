@@ -17,8 +17,10 @@ final cameraViewModelProvider = StateNotifierProvider<CameraViewModel, CameraSta
     ref.read(imageServiceProvider),
     ref.read(ttsServiceProvider),
     ref.read(historyRepositoryProvider),
+    ref.read(settingsServiceProvider),
   );
 });
+
 
 class CameraState {
   final bool isAnalyzing;
@@ -61,13 +63,23 @@ class CameraViewModel extends StateNotifier<CameraState> {
   final ImageService _imageService;
   final TtsService _ttsService;
   final HistoryRepository _historyRepository;
+  final SettingsService _settingsService;
   final _uuid = const Uuid();
 
-  CameraViewModel(this._geminiService, this._imageService, this._ttsService, this._historyRepository) : super(CameraState());
+  CameraViewModel(this._geminiService, this._imageService, this._ttsService, this._historyRepository, this._settingsService) : super(CameraState()) {
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final targetLang = await _settingsService.getTargetLanguage();
+    state = state.copyWith(targetLanguage: targetLang);
+  }
 
   void setTargetLanguage(String language) {
     state = state.copyWith(targetLanguage: language);
+    _settingsService.setTargetLanguage(language);
   }
+
 
   Future<void> capture(CameraController controller) async {
     try {

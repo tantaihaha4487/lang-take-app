@@ -11,6 +11,8 @@ import 'camera_view_model.dart';
 import '../../core/constants/language_config.dart';
 import '../../core/services/settings_service.dart';
 import '../../core/widgets/interactive_glass_container.dart';
+import '../../core/providers/navigation_provider.dart';
+
 
 
 
@@ -368,42 +370,83 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
 
   Widget _buildCaptureControl(CameraViewModel viewModel) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 30),
-      child: InteractiveGlassContainer(
-        onTap: () => viewModel.capture(_controller!),
-        borderRadius: 45,
-        blur: 5,
-        scaleOnTap: 0.85,
-        color: Colors.white.withOpacity(0.1),
-        child: Container(
-          width: 90,
-          height: 90,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withOpacity(0.4),
-                Colors.white.withOpacity(0.1),
-              ],
-            ),
-            border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
-          ),
-          child: Center(
-            child: Container(
-              width: 55,
-              height: 55,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
+      padding: const EdgeInsets.only(bottom: 30, left: 40, right: 40),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Upload Button (Bottom Left)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: InteractiveGlassContainer(
+              onTap: _pickImage,
+              borderRadius: 25,
+              blur: 10,
+              scaleOnTap: 0.9,
+              padding: const EdgeInsets.all(12),
+              child: const Icon(
+                Icons.file_upload_outlined,
                 color: Colors.white,
+                size: 24,
               ),
             ),
           ),
-        ),
+
+          // Capture Button (Center)
+          InteractiveGlassContainer(
+            onTap: () => viewModel.capture(_controller!),
+            borderRadius: 45,
+            blur: 5,
+            scaleOnTap: 0.85,
+            color: Colors.white.withOpacity(0.1),
+            child: Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withOpacity(0.4),
+                    Colors.white.withOpacity(0.1),
+                  ],
+                ),
+                border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+              ),
+              child: Center(
+                child: Container(
+                  width: 55,
+                  height: 55,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Album Button (Bottom Right)
+          Align(
+            alignment: Alignment.centerRight,
+            child: InteractiveGlassContainer(
+              onTap: () => ref.read(navigationIndexProvider.notifier).state = 1,
+              borderRadius: 25,
+              blur: 10,
+              scaleOnTap: 0.9,
+              padding: const EdgeInsets.all(12),
+              child: const Icon(
+                Icons.photo_library_outlined,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
+
 
 
 

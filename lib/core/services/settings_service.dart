@@ -5,6 +5,8 @@ final settingsServiceProvider = Provider((ref) => SettingsService());
 
 class SettingsService {
   static const String _motherLanguageKey = 'mother_language';
+  static const String _targetLanguageKey = 'target_language';
+
 
   Future<String> getMotherLanguage() async {
     final prefs = await SharedPreferences.getInstance();
@@ -15,7 +17,18 @@ class SettingsService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_motherLanguageKey, language);
   }
+
+  Future<String> getTargetLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_targetLanguageKey) ?? 'Spanish';
+  }
+
+  Future<void> setTargetLanguage(String language) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_targetLanguageKey, language);
+  }
 }
+
 
 final motherLanguageProvider = StateNotifierProvider<MotherLanguageNotifier, String>((ref) {
   return MotherLanguageNotifier(ref.read(settingsServiceProvider));
