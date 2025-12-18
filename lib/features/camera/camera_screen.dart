@@ -288,7 +288,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
           DropdownButton<String>(
             value: state.targetLanguage,
             dropdownColor: Colors.black.withOpacity(0.8),
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w200, fontSize: 16),
             underline: Container(),
             icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
             items: LanguageConfig.supportedLanguages.map((AppLanguage lang) {
@@ -527,7 +527,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
               label,
               style: TextStyle(
                 color: isPrimary ? Colors.black : Colors.white,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w200,
               ),
             ),
           ],
@@ -548,7 +548,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
           const SizedBox(height: 16),
           Text(
             locale.analyzing,
-            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500),
+            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w200),
           ),
         ],
       ),
@@ -598,7 +598,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.6),
                         fontSize: 12,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w200,
                         letterSpacing: 2,
                       ),
                     ),
@@ -619,7 +619,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 28,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w200,
                                 ),
                               ),
                               if (translation != null) ...[
@@ -658,7 +658,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                           locale.newCapture,
                           style: const TextStyle(
                             color: Colors.black,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w200,
                             fontSize: 18,
                           ),
                         ),

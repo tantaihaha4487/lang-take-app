@@ -46,7 +46,7 @@ class HistoryScreen extends ConsumerWidget {
               ),
               title: Text(
                 locale.album,
-                style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+                style: const TextStyle(fontWeight: FontWeight.w200, letterSpacing: 1),
               ),
               elevation: 0,
 
@@ -215,7 +215,7 @@ class _HistoryCard extends ConsumerWidget {
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 10,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w200,
                                 ),
                               ),
                             ],
@@ -247,7 +247,7 @@ class _HistoryCard extends ConsumerWidget {
                               Text(
                                 record.subject,
                                 style: const TextStyle(
-                                  fontWeight: FontWeight.bold, 
+                                  fontWeight: FontWeight.w200, 
                                   fontSize: 16,
                                   color: Colors.white,
                                 ),

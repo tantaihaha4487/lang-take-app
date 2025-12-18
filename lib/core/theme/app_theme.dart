@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static final darkTheme = ThemeData(
@@ -18,11 +19,24 @@ class AppTheme {
       elevation: 0,
       centerTitle: true,
     ),
-    textTheme: const TextTheme(
-      displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
-      displayMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Colors.white),
-      bodyLarge: TextStyle(fontSize: 16, color: Colors.white70),
-      bodyMedium: TextStyle(fontSize: 14, color: Colors.white60),
+    textTheme: GoogleFonts.kanitTextTheme(
+      const TextTheme(
+        displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w200, color: Colors.white),
+        displayMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w200, color: Colors.white),
+        bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w200, color: Colors.white70),
+        bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w200, color: Colors.white60),
+        titleLarge: TextStyle(fontWeight: FontWeight.w200),
+        titleMedium: TextStyle(fontWeight: FontWeight.w200),
+        titleSmall: TextStyle(fontWeight: FontWeight.w200),
+        bodySmall: TextStyle(fontWeight: FontWeight.w200),
+        labelLarge: TextStyle(fontWeight: FontWeight.w200),
+        labelMedium: TextStyle(fontWeight: FontWeight.w200),
+        labelSmall: TextStyle(fontWeight: FontWeight.w200),
+      ),
+    ).apply(
+      bodyColor: Colors.white,
+      displayColor: Colors.white,
     ),
   );
 }
+

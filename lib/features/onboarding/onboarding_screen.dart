@@ -135,7 +135,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             style: const TextStyle(
               color: Colors.white,
               fontSize: 28,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w200,
               letterSpacing: -0.5,
             ),
             textAlign: TextAlign.center,
@@ -262,7 +262,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             style: TextStyle(
               color: Colors.white,
               fontSize: 18,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontWeight: isSelected ? FontWeight.w200 : FontWeight.normal,
             ),
           ),
           const Spacer(),
@@ -290,7 +290,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Text(
                 locale.back,
-                style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
+                style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w200),
               ),
             )
           else
@@ -305,7 +305,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               _currentPage == 2 ? locale.getStarted : locale.next,
               style: const TextStyle(
                 color: Colors.black,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w200,
                 fontSize: 16,
               ),
             ),
