@@ -13,6 +13,8 @@ import '../../core/services/settings_service.dart';
 import '../../core/widgets/interactive_glass_container.dart';
 import '../../core/providers/navigation_provider.dart';
 import '../../core/constants/app_locales.dart';
+import '../../core/constants/app_config.dart';
+
 
 
 
@@ -328,14 +330,17 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
         return Consumer(
           builder: (context, ref, child) {
             final motherLang = ref.watch(motherLanguageProvider);
+            final appLang = ref.watch(appLanguageProvider);
             final locale = ref.watch(appLocaleProvider);
+            final config = ref.watch(appConfigProvider);
+
             return AlertDialog(
-              title: const Text('Settings'),
+              title: Text(locale.settings),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Your Mother Language:'),
+                  Text('${locale.motherLanguage}:'),
                   const SizedBox(height: 8),
                   DropdownButton<String>(
                     isExpanded: true,
@@ -358,28 +363,57 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                       }
                     },
                   ),
-                  const SizedBox(height: 24),
-                  const Divider(),
                   const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () async {
-                        await ref.read(settingsServiceProvider).resetFirstTime();
-                        if (context.mounted) {
-                          Navigator.pop(context); // Close dialog
-                          Navigator.pushReplacementNamed(context, '/onboarding');
-                        }
-                      },
-                      icon: const Icon(Icons.refresh, color: Colors.redAccent),
-                      label: const Text('Reset Onboarding', style: TextStyle(color: Colors.redAccent)),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.redAccent),
+                  Text('${locale.appLanguage}:'),
+                  const SizedBox(height: 8),
+                  DropdownButton<String>(
+                    isExpanded: true,
+                    value: appLang,
+                    items: ['English', 'Thai'].map((String lang) {
+                      final langData = LanguageConfig.supportedLanguages.firstWhere((l) => l.name == lang);
+                      return DropdownMenuItem<String>(
+                        value: lang,
+                        child: Row(
+                          children: [
+                            Text(langData.flag),
+                            const SizedBox(width: 8),
+                            Text(lang),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        ref.read(appLanguageProvider.notifier).setLanguage(newValue);
+                      }
+                    },
+                  ),
+                  if (config.showResetOnboarding) ...[
+                    const SizedBox(height: 24),
+                    const Divider(),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          await ref.read(settingsServiceProvider).resetFirstTime();
+                          if (context.mounted) {
+                            Navigator.pop(context); // Close dialog
+                            Navigator.pushReplacementNamed(context, '/onboarding');
+                          }
+                        },
+                        icon: const Icon(Icons.refresh, color: Colors.redAccent),
+                        label: Text(locale.resetOnboarding, style: const TextStyle(color: Colors.redAccent)),
+                        style: OutlinedButton.styleFrom(
+
+                          side: const BorderSide(color: Colors.redAccent),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
               ),
+
 
               actions: [
                 TextButton(

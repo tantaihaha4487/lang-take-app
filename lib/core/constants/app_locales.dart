@@ -26,8 +26,10 @@ class AppLocale {
   final String learnPrompt;
   final String subjectLabel;
   final String translationLabel;
+  final String resetOnboarding;
 
   AppLocale({
+
 
     required this.title,
     required this.camera,
@@ -51,8 +53,10 @@ class AppLocale {
     required this.learnPrompt,
     required this.subjectLabel,
     required this.translationLabel,
+    required this.resetOnboarding,
   });
 }
+
 
 final Map<String, AppLocale> supportedLocales = {
   'English': AppLocale(
@@ -78,7 +82,9 @@ final Map<String, AppLocale> supportedLocales = {
     learnPrompt: 'I want to learn: ',
     subjectLabel: 'Subject',
     translationLabel: 'Translation',
+    resetOnboarding: 'Reset Onboarding',
   ),
+
 
   'Thai': AppLocale(
     title: 'LangTake',
@@ -103,8 +109,10 @@ final Map<String, AppLocale> supportedLocales = {
     learnPrompt: 'ฉันต้องการเรียน: ',
     subjectLabel: 'สิ่งที่เห็น',
     translationLabel: 'คำแปล',
+    resetOnboarding: 'รีเซ็ตการตั้งค่าเริ่มต้น',
   ),
 };
+
 
 
 final appLocaleProvider = Provider<AppLocale>((ref) {
