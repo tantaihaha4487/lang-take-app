@@ -7,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'camera_view_model.dart';
 import '../../core/constants/language_config.dart';
+import '../../core/services/settings_service.dart';
+
 
 
 class CameraScreen extends ConsumerStatefulWidget {
@@ -277,17 +279,73 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                 ),
               );
             }).toList(),
-
             onChanged: (String? newValue) {
               if (newValue != null) {
                 viewModel.setTargetLanguage(newValue);
               }
             },
           ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white70),
+            onPressed: () => _showSettingsDialog(context),
+          ),
         ],
       ),
     );
   }
+
+  void _showSettingsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Consumer(
+          builder: (context, ref, child) {
+            final motherLang = ref.watch(motherLanguageProvider);
+            return AlertDialog(
+              title: const Text('Settings'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Your Mother Language:'),
+                  const SizedBox(height: 8),
+                  DropdownButton<String>(
+                    isExpanded: true,
+                    value: motherLang,
+                    items: LanguageConfig.supportedLanguages.map((AppLanguage lang) {
+                      return DropdownMenuItem<String>(
+                        value: lang.name,
+                        child: Row(
+                          children: [
+                            Text(lang.flag),
+                            const SizedBox(width: 8),
+                            Text(lang.name),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        ref.read(motherLanguageProvider.notifier).setLanguage(newValue);
+                      }
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Close'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
 
   Widget _buildCaptureControl(CameraViewModel viewModel) {
     return Padding(
@@ -334,9 +392,13 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
             ),
           ),
           ElevatedButton.icon(
-            onPressed: viewModel.identify,
+            onPressed: () {
+              final motherLang = ref.read(motherLanguageProvider);
+              viewModel.identify(motherLang);
+            },
             icon: const Icon(Icons.auto_awesome),
             label: const Text('Identify'),
+
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: Colors.black,
@@ -411,6 +473,19 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                 ),
                 textAlign: TextAlign.center,
               ),
+              if (result['translation'] != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  result['translation'],
+                  style: TextStyle(
+                    color: Colors.grey[700],
+                    fontSize: 18,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

@@ -19,11 +19,16 @@ class ImageRecord extends HiveObject {
   @HiveField(4)
   final DateTime createdAt;
 
+  @HiveField(5)
+  final String? translation;
+
   ImageRecord({
     required this.id,
     required this.imagePath,
     required this.subject,
     required this.language,
     required this.createdAt,
+    this.translation,
   });
+
 }

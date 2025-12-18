@@ -181,15 +181,31 @@ class _HistoryCard extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
-                          child: Text(
-                            record.subject,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold, 
-                              fontSize: 16,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                record.subject,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold, 
+                                  fontSize: 16,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (record.translation != null)
+                                Text(
+                                  record.translation!,
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
                           ),
                         ),
+
                         // 4. Audio Button
                         Material(
                           color: Colors.blue.withOpacity(0.1),

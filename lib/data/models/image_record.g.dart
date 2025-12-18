@@ -22,13 +22,14 @@ class ImageRecordAdapter extends TypeAdapter<ImageRecord> {
       subject: fields[2] as String,
       language: fields[3] as String,
       createdAt: fields[4] as DateTime,
+      translation: fields[5] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ImageRecord obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -38,7 +39,9 @@ class ImageRecordAdapter extends TypeAdapter<ImageRecord> {
       ..writeByte(3)
       ..write(obj.language)
       ..writeByte(4)
-      ..write(obj.createdAt);
+      ..write(obj.createdAt)
+      ..writeByte(5)
+      ..write(obj.translation);
   }
 
   @override

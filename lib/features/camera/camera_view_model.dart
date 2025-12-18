@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/services/gemini_service.dart';
 import '../../core/services/image_service.dart';
 import '../../core/services/tts_service.dart';
+import '../../core/services/settings_service.dart';
 import '../../data/repositories/history_repository.dart';
 import '../../data/models/image_record.dart';
 
@@ -94,7 +95,7 @@ class CameraViewModel extends StateNotifier<CameraState> {
     );
   }
 
-  Future<void> identify() async {
+  Future<void> identify(String motherLanguage) async {
     if (state.capturedImage == null || state.isAnalyzing) return;
 
     try {
@@ -105,6 +106,7 @@ class CameraViewModel extends StateNotifier<CameraState> {
       final result = await _geminiService.identifyObject(
         compressedBytes,
         state.targetLanguage,
+        motherLanguage,
       );
 
       state = state.copyWith(
@@ -166,7 +168,9 @@ class CameraViewModel extends StateNotifier<CameraState> {
         subject: name,
         language: language,
         createdAt: DateTime.now(),
+        translation: result['translation'],
       );
+
 
       await _historyRepository.addRecord(record);
     } catch (e) {

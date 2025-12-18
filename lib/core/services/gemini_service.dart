@@ -20,16 +20,25 @@ class GeminiService {
     );
   }
 
-  Future<Map<String, dynamic>> identifyObject(Uint8List imageBytes, String targetLanguage) async {
+  Future<Map<String, dynamic>> identifyObject(
+    Uint8List imageBytes, 
+    String targetLanguage,
+    String motherLanguage,
+  ) async {
     final promptText = '''
-      Identify the main subject in this picture. Return the name of the subject in $targetLanguage. 
+      Identify the main subject/object in this picture. 
+      1. Provide the name of the subject/object in $targetLanguage.
+      2. Provide the translation of that name in $motherLanguage.
+      
       Return the response as a JSON object with the following structure:
       {
-        "subject": "The name of the subject in $targetLanguage",
+        "subject": "The name of the subject/object in $targetLanguage",
+        "translation": "The translation of the subject/object in $motherLanguage",
         "language": "$targetLanguage"
       }
       Do not include markdown formatting like ```json. Just the raw JSON string.
     ''';
+
 
     final content = [
       Content.multi([
