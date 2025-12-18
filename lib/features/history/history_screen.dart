@@ -9,6 +9,8 @@ import '../../core/services/tts_service.dart';
 import '../../core/constants/language_config.dart';
 import '../../core/widgets/interactive_glass_container.dart';
 import '../../core/providers/navigation_provider.dart';
+import '../../core/constants/app_locales.dart';
+
 
 
 
@@ -27,8 +29,10 @@ class HistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final historyAsync = ref.watch(historyProvider);
+    final locale = ref.watch(appLocaleProvider);
 
     return Scaffold(
+
       extendBodyBehindAppBar: true,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight),
@@ -40,11 +44,12 @@ class HistoryScreen extends ConsumerWidget {
                 icon: const Icon(Icons.camera_alt_outlined),
                 onPressed: () => ref.read(navigationIndexProvider.notifier).state = 0,
               ),
-              title: const Text(
-                "Your Collection",
-                style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+              title: Text(
+                locale.album,
+                style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
               ),
               elevation: 0,
+
               backgroundColor: Colors.white.withOpacity(0.1),
               foregroundColor: Colors.white,
               centerTitle: true,
@@ -79,10 +84,15 @@ class HistoryScreen extends ConsumerWidget {
                       Icon(Icons.photo_library_outlined, size: 64, color: Colors.white.withOpacity(0.3)),
                       const SizedBox(height: 16),
                       Text(
-                        "No photos yet. Go take some!",
+                        locale.noPhotos,
                         style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16),
                       ),
+                      Text(
+                        locale.goTakeSome,
+                        style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14),
+                      ),
                     ],
+
                   ),
                 );
               }

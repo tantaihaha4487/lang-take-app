@@ -12,6 +12,8 @@ import '../../core/constants/language_config.dart';
 import '../../core/services/settings_service.dart';
 import '../../core/widgets/interactive_glass_container.dart';
 import '../../core/providers/navigation_provider.dart';
+import '../../core/constants/app_locales.dart';
+
 
 
 
@@ -176,6 +178,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
   Widget build(BuildContext context) {
     final cameraState = ref.watch(cameraViewModelProvider);
     final viewModel = ref.read(cameraViewModelProvider.notifier);
+    final locale = ref.watch(appLocaleProvider);
 
     // Fallback UI for Linux/No Camera
     if (_cameraNotSupported) {
@@ -269,6 +272,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
   }
 
   Widget _buildTopBar(CameraState state, CameraViewModel viewModel) {
+    final locale = ref.watch(appLocaleProvider);
     return InteractiveGlassContainer(
       borderRadius: 30,
       blur: 15,
@@ -276,10 +280,11 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'I want to learn: ',
-            style: TextStyle(color: Colors.white70, fontSize: 16),
+          Text(
+            locale.learnPrompt,
+            style: const TextStyle(color: Colors.white70, fontSize: 16),
           ),
+
           DropdownButton<String>(
             value: state.targetLanguage,
             dropdownColor: Colors.black.withOpacity(0.8),
@@ -323,6 +328,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
         return Consumer(
           builder: (context, ref, child) {
             final motherLang = ref.watch(motherLanguageProvider);
+            final locale = ref.watch(appLocaleProvider);
             return AlertDialog(
               title: const Text('Settings'),
               content: Column(
@@ -357,7 +363,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Close'),
+                  child: Text(locale.close),
                 ),
               ],
             );
@@ -369,6 +375,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
 
 
   Widget _buildCaptureControl(CameraViewModel viewModel) {
+    final locale = ref.watch(appLocaleProvider);
     return Padding(
       padding: const EdgeInsets.only(bottom: 30, left: 40, right: 40),
       child: Stack(
@@ -451,6 +458,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
 
 
   Widget _buildReviewControls(CameraViewModel viewModel) {
+    final locale = ref.watch(appLocaleProvider);
     return Padding(
       padding: const EdgeInsets.only(bottom: 40, left: 20, right: 20),
       child: Row(
@@ -459,7 +467,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
           _buildGlassButton(
             onPressed: viewModel.retake,
             icon: Icons.refresh,
-            label: 'Retake',
+            label: locale.retake,
             isPrimary: false,
           ),
           _buildGlassButton(
@@ -468,9 +476,10 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
               viewModel.identify(motherLang);
             },
             icon: Icons.auto_awesome,
-            label: 'Identify',
+            label: locale.identify,
             isPrimary: true,
           ),
+
         ],
       ),
     );
@@ -509,15 +518,16 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
 
 
   Widget _buildLoadingIndicator() {
-    return const Padding(
-      padding: EdgeInsets.only(bottom: 50),
+    final locale = ref.watch(appLocaleProvider);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 50),
       child: Column(
         children: [
-          CircularProgressIndicator(color: Colors.white),
-          SizedBox(height: 16),
+          const CircularProgressIndicator(color: Colors.white),
+          const SizedBox(height: 16),
           Text(
-            'Analyzing...',
-            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500),
+            locale.analyzing,
+            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -526,10 +536,13 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
 
   Widget _buildResultCard(CameraState state, CameraViewModel viewModel, {VoidCallback? onNewCapture}) {
     final result = state.identifiedResult;
+    final locale = ref.watch(appLocaleProvider);
     if (result == null) return const SizedBox.shrink();
 
     final subject = result['subject'] ?? 'Unknown';
     final language = result['language'] ?? state.targetLanguage;
+    final translation = result['translation'];
+
 
     return Container(
       width: double.infinity,
@@ -569,45 +582,66 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      subject,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    if (result['translation'] != null) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        result['translation'],
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
-                          fontSize: 20,
-                          fontStyle: FontStyle.italic,
-                          fontWeight: FontWeight.w300,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                    const SizedBox(height: 32),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                locale.subjectLabel,
+                                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+                              ),
+                              Text(
+                                subject,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              if (translation != null) ...[
+                                const SizedBox(height: 16),
+                                Text(
+                                  locale.translationLabel,
+                                  style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+                                ),
+                                Text(
+                                  translation,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 22,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
                         _buildGlassIconButton(
                           onPressed: viewModel.speakResult,
-                          icon: Icons.volume_up_rounded,
-                        ),
-                        const SizedBox(width: 20),
-                        _buildGlassButton(
-                          onPressed: onNewCapture ?? viewModel.retake,
-                          icon: Icons.add_a_photo_outlined,
-                          label: 'New Capture',
-                          isPrimary: true,
+                          icon: Icons.volume_up,
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 32),
+                    InteractiveGlassContainer(
+                      onTap: onNewCapture ?? viewModel.retake,
+                      borderRadius: 20,
+                      color: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: Text(
+                          locale.newCapture,
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
