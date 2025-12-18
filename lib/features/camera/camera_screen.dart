@@ -1,4 +1,6 @@
 import 'dart:io' show Platform;
+import 'dart:ui';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -189,6 +191,21 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
       body: Stack(
         fit: StackFit.expand,
         children: [
+          // Layer 0: Background Gradient (to make glass pop)
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF0F2027),
+                  Color(0xFF203A43),
+                  Color(0xFF2C5364),
+                ],
+              ),
+            ),
+          ),
+          
           // Layer 1: Camera Preview or Captured Image
           if (cameraState.isReviewing && cameraState.capturedImage != null)
             Image.memory(cameraState.capturedImage!, fit: BoxFit.cover)
@@ -221,6 +238,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
               ],
             ),
           ),
+
           
           // Error Message Toast
           if (cameraState.errorMessage != null)
@@ -247,53 +265,61 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
   }
 
   Widget _buildTopBar(CameraState state, CameraViewModel viewModel) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      margin: const EdgeInsets.only(top: 8),
-      decoration: BoxDecoration(
-        color: Colors.black54,
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            'I want to learn: ',
-            style: TextStyle(color: Colors.white70, fontSize: 16),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(30),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          margin: const EdgeInsets.only(top: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
           ),
-          DropdownButton<String>(
-            value: state.targetLanguage,
-            dropdownColor: Colors.grey[900],
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-            underline: Container(),
-            icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-            items: LanguageConfig.supportedLanguages.map((AppLanguage lang) {
-              return DropdownMenuItem<String>(
-                value: lang.name,
-                child: Row(
-                  children: [
-                    Text(lang.flag),
-                    const SizedBox(width: 8),
-                    Text(lang.name),
-                  ],
-                ),
-              );
-            }).toList(),
-            onChanged: (String? newValue) {
-              if (newValue != null) {
-                viewModel.setTargetLanguage(newValue);
-              }
-            },
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'I want to learn: ',
+                style: TextStyle(color: Colors.white70, fontSize: 16),
+              ),
+              DropdownButton<String>(
+                value: state.targetLanguage,
+                dropdownColor: Colors.black.withOpacity(0.8),
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                underline: Container(),
+                icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                items: LanguageConfig.supportedLanguages.map((AppLanguage lang) {
+                  return DropdownMenuItem<String>(
+                    value: lang.name,
+                    child: Row(
+                      children: [
+                        Text(lang.flag),
+                        const SizedBox(width: 8),
+                        Text(lang.name),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    viewModel.setTargetLanguage(newValue);
+                  }
+                },
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.settings, color: Colors.white70),
+                onPressed: () => _showSettingsDialog(context),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white70),
-            onPressed: () => _showSettingsDialog(context),
-          ),
-        ],
+        ),
       ),
     );
   }
+
 
   void _showSettingsDialog(BuildContext context) {
     showDialog(
@@ -353,20 +379,50 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
       child: GestureDetector(
         onTap: () => viewModel.capture(_controller!),
         child: Container(
-          width: 80,
-          height: 80,
+          width: 90,
+          height: 90,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 4),
-            color: Colors.white24,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withOpacity(0.4),
+                Colors.white.withOpacity(0.1),
+              ],
+            ),
+            border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 15,
+                spreadRadius: 5,
+              ),
+            ],
           ),
           child: Center(
-            child: Container(
-              width: 60,
-              height: 60,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(45),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                child: Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.2),
+                  ),
+                  child: Center(
+                    child: Container(
+                      width: 55,
+                      height: 55,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -375,40 +431,64 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
     );
   }
 
+
   Widget _buildReviewControls(CameraViewModel viewModel) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 40, left: 20, right: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          ElevatedButton.icon(
+          _buildGlassButton(
             onPressed: viewModel.retake,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Retake'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white24,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
+            icon: Icons.refresh,
+            label: 'Retake',
+            isPrimary: false,
           ),
-          ElevatedButton.icon(
+          _buildGlassButton(
             onPressed: () {
               final motherLang = ref.read(motherLanguageProvider);
               viewModel.identify(motherLang);
             },
-            icon: const Icon(Icons.auto_awesome),
-            label: const Text('Identify'),
-
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
+            icon: Icons.auto_awesome,
+            label: 'Identify',
+            isPrimary: true,
           ),
         ],
       ),
     );
   }
+
+  Widget _buildGlassButton({
+    required VoidCallback onPressed,
+    required IconData icon,
+    required String label,
+    required bool isPrimary,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isPrimary ? Colors.white.withOpacity(0.9) : Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+          ),
+          child: ElevatedButton.icon(
+            onPressed: onPressed,
+            icon: Icon(icon, color: isPrimary ? Colors.black : Colors.white),
+            label: Text(label, style: TextStyle(color: isPrimary ? Colors.black : Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildLoadingIndicator() {
     return const Padding(
@@ -436,99 +516,120 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 8), // Space for close button
-              Text(
-                language.toUpperCase(),
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                subject,
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              if (result['translation'] != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  result['translation'],
-                  style: TextStyle(
-                    color: Colors.grey[700],
-                    fontSize: 18,
-                    fontStyle: FontStyle.italic,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    onPressed: viewModel.speakResult,
-                    icon: const Icon(Icons.volume_up_rounded),
-                    iconSize: 32,
-                    color: Colors.blueAccent,
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.blueAccent.withOpacity(0.1),
-                      padding: const EdgeInsets.all(12),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  ElevatedButton(
-                    onPressed: onNewCapture ?? viewModel.retake,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    ),
-                    child: const Text('New Capture'),
-                  ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(32),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: Colors.white.withOpacity(0.3)),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.2),
+                  Colors.white.withOpacity(0.05),
                 ],
               ),
-            ],
-          ),
-          Positioned(
-            top: -10,
-            right: -10,
-            child: IconButton(
-              icon: const Icon(Icons.close, color: Colors.grey),
-              onPressed: viewModel.resetResultOnly,
+            ),
+            child: Stack(
+              children: [
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 8),
+                    Text(
+                      language.toUpperCase(),
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.6),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      subject,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    if (result['translation'] != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        result['translation'],
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.7),
+                          fontSize: 20,
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.w300,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                    const SizedBox(height: 32),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildGlassIconButton(
+                          onPressed: viewModel.speakResult,
+                          icon: Icons.volume_up_rounded,
+                        ),
+                        const SizedBox(width: 20),
+                        _buildGlassButton(
+                          onPressed: onNewCapture ?? viewModel.retake,
+                          icon: Icons.add_a_photo_outlined,
+                          label: 'New Capture',
+                          isPrimary: true,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                Positioned(
+                  top: -10,
+                  right: -10,
+                  child: IconButton(
+                    icon: Icon(Icons.close, color: Colors.white.withOpacity(0.5)),
+                    onPressed: viewModel.resetResultOnly,
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
+
+  Widget _buildGlassIconButton({required VoidCallback onPressed, required IconData icon}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(15),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+          ),
+          child: IconButton(
+            onPressed: onPressed,
+            icon: Icon(icon, color: Colors.white),
+            iconSize: 28,
+          ),
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildFallbackUI(CameraState state, CameraViewModel viewModel) {
     return Scaffold(

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
 import '../../data/models/image_record.dart';
@@ -21,65 +23,94 @@ class HistoryScreen extends ConsumerWidget {
     final historyAsync = ref.watch(historyProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "Your Collection",
-          style: TextStyle(fontWeight: FontWeight.bold),
+      extendBodyBehindAppBar: true,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: AppBar(
+              title: const Text(
+                "Your Collection",
+                style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+              ),
+              elevation: 0,
+              backgroundColor: Colors.white.withOpacity(0.1),
+              foregroundColor: Colors.white,
+              centerTitle: true,
+            ),
+          ),
         ),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
       ),
-      body: historyAsync.when(
-        data: (records) {
-          if (records.isEmpty) {
-            return Center(
+      body: Stack(
+        children: [
+          // Background Gradient
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF0F2027),
+                  Color(0xFF203A43),
+                  Color(0xFF2C5364),
+                ],
+              ),
+            ),
+          ),
+          historyAsync.when(
+            data: (records) {
+              if (records.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.photo_library_outlined, size: 64, color: Colors.white.withOpacity(0.3)),
+                      const SizedBox(height: 16),
+                      Text(
+                        "No photos yet. Go take some!",
+                        style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return GridView.builder(
+                padding: const EdgeInsets.fromLTRB(16, kToolbarHeight + 32, 16, 16),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.75,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                ),
+                itemCount: records.length,
+                itemBuilder: (context, index) {
+                  final record = records[index];
+                  return _HistoryCard(record: record, index: index);
+                },
+              );
+            },
+            loading: () => const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ),
+            error: (err, stack) => Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.photo_library_outlined, size: 64, color: Colors.grey[300]),
+                  const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
                   const SizedBox(height: 16),
-                  const Text(
-                    "No photos yet. Go take some!",
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
-                  ),
+                  Text('Error: $err', style: const TextStyle(color: Colors.redAccent)),
                 ],
               ),
-            );
-          }
-
-          return GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.75,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
             ),
-            itemCount: records.length,
-            itemBuilder: (context, index) {
-              final record = records[index];
-              return _HistoryCard(record: record, index: index);
-            },
-          );
-        },
-        loading: () => const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
           ),
-        ),
-        error: (err, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
-              const SizedBox(height: 16),
-              Text('Error: $err', style: const TextStyle(color: Colors.red)),
-            ],
-          ),
-        ),
+        ],
       ),
     );
+
   }
 }
 
@@ -106,134 +137,158 @@ class _HistoryCard extends ConsumerWidget {
           ),
         );
       },
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        elevation: 4,
-        shadowColor: Colors.black26,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Image Area
-            Expanded(
-              flex: 3,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.file(
-                    File(record.imagePath),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[200],
-                        child: const Icon(Icons.broken_image, color: Colors.grey),
-                      );
-                    },
-                  ),
-                  // 2. Language Badge
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
-                        borderRadius: BorderRadius.circular(12),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Image Area
+                Expanded(
+                  flex: 3,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.file(
+                        File(record.imagePath),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.white.withOpacity(0.05),
+                            child: const Icon(Icons.broken_image, color: Colors.white24),
+                          );
+                        },
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            LanguageConfig.supportedLanguages
-                                .firstWhere((l) => l.name == record.language,
-                                    orElse: () => LanguageConfig.supportedLanguages.first)
-                                .flag,
-                            style: const TextStyle(fontSize: 10),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            record.language,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
+                      // 2. Language Badge
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.4),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.white.withOpacity(0.1)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    LanguageConfig.supportedLanguages
+                                        .firstWhere((l) => l.name == record.language,
+                                            orElse: () => LanguageConfig.supportedLanguages.first)
+                                        .flag,
+                                    style: const TextStyle(fontSize: 10),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    record.language,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ],
+                        ),
                       ),
-
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-            
-            // 3. Content Area
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
+                ),
+                
+                // 3. Content Area
+                Expanded(
+                  flex: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                record.subject,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold, 
-                                  fontSize: 16,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              if (record.translation != null)
-                                Text(
-                                  record.translation!,
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    record.subject,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold, 
+                                      fontSize: 16,
+                                      color: Colors.white,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                            ],
-                          ),
-                        ),
+                                  if (record.translation != null)
+                                    Text(
+                                      record.translation!,
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.6),
+                                        fontSize: 12,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                ],
+                              ),
+                            ),
 
-                        // 4. Audio Button
-                        Material(
-                          color: Colors.blue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          child: IconButton(
-                            icon: const Icon(Icons.volume_up, color: Colors.blue, size: 20),
-                            onPressed: () {
-                              ttsService.speak(record.subject, language: record.language);
-                            },
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                          ),
-                        )
+                            // 4. Audio Button
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: Colors.white.withOpacity(0.1)),
+                                  ),
+                                  child: IconButton(
+                                    icon: const Icon(Icons.volume_up, color: Colors.white, size: 18),
+                                    onPressed: () {
+                                      ttsService.speak(record.subject, language: record.language);
+                                    },
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                  ),
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
+                        // 5. Date
+                        Text(
+                          "${record.createdAt.day}/${record.createdAt.month}/${record.createdAt.year}",
+                          style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10),
+                        ),
                       ],
                     ),
-                    // 5. Date
-                    Text(
-                      "${record.createdAt.day}/${record.createdAt.month}/${record.createdAt.year}",
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
+
   }
 }
 
