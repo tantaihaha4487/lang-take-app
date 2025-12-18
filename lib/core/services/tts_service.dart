@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../constants/language_config.dart';
 
 final ttsServiceProvider = Provider((ref) => TtsService());
 
@@ -32,19 +33,6 @@ class TtsService {
     }
   }
 
-  final Map<String, String> _languageCodes = {
-    'English': 'en-US',
-    'Spanish': 'es-ES',
-    'Japanese': 'ja-JP',
-    'French': 'fr-FR',
-    'German': 'de-DE',
-    'Italian': 'it-IT',
-    'Chinese': 'zh-CN',
-    'Korean': 'ko-KR',
-    'Russian': 'ru-RU',
-    'Portuguese': 'pt-BR',
-  };
-
   Future<void> speak(String text, {String? language}) async {
     if (!_isSupported || _flutterTts == null) {
       debugPrint('TtsService: Would speak: "$text" in $language (TTS not available on this platform)');
@@ -53,7 +41,7 @@ class TtsService {
     
     try {
       if (language != null) {
-        final code = _languageCodes[language] ?? 'en-US';
+        final code = LanguageConfig.getCode(language);
         await _flutterTts!.setLanguage(code);
       }
       await _flutterTts!.speak(text);
@@ -61,6 +49,7 @@ class TtsService {
       debugPrint('TtsService: Error speaking: $e');
     }
   }
+
 
   Future<void> stop() async {
     if (!_isSupported || _flutterTts == null) {

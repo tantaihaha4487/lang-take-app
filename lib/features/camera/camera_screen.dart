@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'camera_view_model.dart';
+import '../../core/constants/language_config.dart';
+
 
 class CameraScreen extends ConsumerStatefulWidget {
   const CameraScreen({super.key});
@@ -28,18 +30,8 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
 
   final ImagePicker _imagePicker = ImagePicker();
   
-  final List<String> _languages = [
-    'English',
-    'Spanish',
-    'Japanese',
-    'French',
-    'German',
-    'Italian',
-    'Chinese',
-    'Korean',
-    'Russian',
-    'Portuguese',
-  ];
+  final List<String> _languages = LanguageConfig.names;
+
 
   @override
   void initState() {
@@ -273,12 +265,19 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
             underline: Container(),
             icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-            items: _languages.map((String value) {
+            items: LanguageConfig.supportedLanguages.map((AppLanguage lang) {
               return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
+                value: lang.name,
+                child: Row(
+                  children: [
+                    Text(lang.flag),
+                    const SizedBox(width: 8),
+                    Text(lang.name),
+                  ],
+                ),
               );
             }).toList(),
+
             onChanged: (String? newValue) {
               if (newValue != null) {
                 viewModel.setTargetLanguage(newValue);

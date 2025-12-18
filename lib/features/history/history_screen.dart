@@ -4,6 +4,8 @@ import 'dart:io';
 import '../../data/models/image_record.dart';
 import '../../data/repositories/history_repository.dart';
 import '../../core/services/tts_service.dart';
+import '../../core/constants/language_config.dart';
+
 
 final historyProvider = StreamProvider<List<ImageRecord>>((ref) {
   final repository = ref.watch(historyRepositoryProvider);
@@ -138,14 +140,28 @@ class _HistoryCard extends ConsumerWidget {
                         color: Colors.black.withOpacity(0.6),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text(
-                        record.language,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            LanguageConfig.supportedLanguages
+                                .firstWhere((l) => l.name == record.language,
+                                    orElse: () => LanguageConfig.supportedLanguages.first)
+                                .flag,
+                            style: const TextStyle(fontSize: 10),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            record.language,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
+
                     ),
                   ),
                 ],
