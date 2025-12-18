@@ -8,7 +8,7 @@ import '../../core/services/gemini_service.dart';
 import '../../core/services/image_service.dart';
 import '../../core/services/tts_service.dart';
 import '../../data/repositories/history_repository.dart';
-import '../../data/models/history_item.dart';
+import '../../data/models/image_record.dart';
 
 final cameraViewModelProvider = StateNotifierProvider<CameraViewModel, CameraState>((ref) {
   return CameraViewModel(
@@ -155,21 +155,20 @@ class CameraViewModel extends StateNotifier<CameraState> {
     
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final imagePath = '${dir.path}/${_uuid.v4()}.jpg';
+      final id = _uuid.v4();
+      final imagePath = '${dir.path}/$id.jpg';
       final file = File(imagePath);
       await file.writeAsBytes(state.capturedImage!);
 
-      final item = HistoryItem(
-        id: _uuid.v4(),
-        name: name,
-        pronunciation: '', // Not provided in simple JSON
-        translation: language, // Using translation field for language label for now
-        description: 'Identified as $name in $language',
-        timestamp: DateTime.now(),
+      final record = ImageRecord(
+        id: id,
         imagePath: imagePath,
+        subject: name,
+        language: language,
+        createdAt: DateTime.now(),
       );
 
-      await _historyRepository.saveHistoryItem(item);
+      await _historyRepository.addRecord(record);
     } catch (e) {
       print('Error saving history: $e');
     }
