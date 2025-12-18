@@ -52,7 +52,13 @@ class SettingsService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_isFirstTimeKey, false);
   }
+
+  Future<void> resetFirstTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_isFirstTimeKey, true);
+  }
 }
+
 
 
 

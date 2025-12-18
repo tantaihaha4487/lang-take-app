@@ -358,8 +358,29 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                       }
                     },
                   ),
+                  const SizedBox(height: 24),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        await ref.read(settingsServiceProvider).resetFirstTime();
+                        if (context.mounted) {
+                          Navigator.pop(context); // Close dialog
+                          Navigator.pushReplacementNamed(context, '/onboarding');
+                        }
+                      },
+                      icon: const Icon(Icons.refresh, color: Colors.redAccent),
+                      label: const Text('Reset Onboarding', style: TextStyle(color: Colors.redAccent)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.redAccent),
+                      ),
+                    ),
+                  ),
                 ],
               ),
+
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
