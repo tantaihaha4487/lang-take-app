@@ -23,6 +23,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   String _selectedTargetLanguage = 'Spanish';
   String _selectedMotherLanguage = 'English';
 
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   void _nextPage() {
     if (_currentPage < 2) {
       _pageController.nextPage(
@@ -46,33 +52,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     ref.read(cameraViewModelProvider.notifier).setTargetLanguage(_selectedTargetLanguage);
     ref.read(appLanguageProvider.notifier).setLanguage(_selectedAppLanguage);
 
-    
     if (mounted) {
       Navigator.of(context).pushReplacementNamed('/main');
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-    final locale = ref.watch(appLocaleProvider);
     return Scaffold(
-
       body: Stack(
         children: [
-          // Background Gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF0F2027),
-                  Color(0xFF203A43),
-                  Color(0xFF2C5364),
-                ],
-              ),
-            ),
+          // Background Gradient - Isolated with RepaintBoundary
+          const RepaintBoundary(
+            child: _BackgroundGradient(),
           ),
           
           SafeArea(
@@ -81,15 +73,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 const SizedBox(height: 40),
                 _buildProgressIndicator(),
                 Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                    onPageChanged: (page) => setState(() => _currentPage = page),
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: [
-                      _buildAppLanguageStep(),
-                      _buildTargetLanguageStep(),
-                      _buildMotherLanguageStep(),
-                    ],
+                  child: RepaintBoundary(
+                    child: PageView(
+                      controller: _pageController,
+                      onPageChanged: (page) => setState(() => _currentPage = page),
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        _buildAppLanguageStep(),
+                        _buildTargetLanguageStep(),
+                        _buildMotherLanguageStep(),
+                      ],
+                    ),
                   ),
                 ),
                 _buildBottomControls(),
@@ -106,13 +100,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(3, (index) {
+        final isSelected = _currentPage == index;
         return AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           margin: const EdgeInsets.symmetric(horizontal: 4),
           height: 8,
-          width: _currentPage == index ? 24 : 8,
+          width: isSelected ? 24 : 8,
           decoration: BoxDecoration(
-            color: _currentPage == index ? Colors.white : Colors.white.withOpacity(0.3),
+            color: isSelected ? Colors.white : Colors.white.withOpacity(0.3),
             borderRadius: BorderRadius.circular(4),
           ),
         );
@@ -140,7 +135,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
             textAlign: TextAlign.center,
           ),
-          if (subtitle != null) ...[
+          if (subtitle != null && subtitle.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
               subtitle,
@@ -152,7 +147,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
           ],
           const SizedBox(height: 48),
-          content,
+          Expanded(child: content),
         ],
       ),
     );
@@ -163,26 +158,31 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return _buildStepContainer(
       title: locale.appLanguage,
       subtitle: locale.appLanguageSub,
-      content: Column(
-        children: [
-          _buildLanguageOption(
-            lang: LanguageConfig.supportedLanguages.firstWhere((l) => l.name == 'English'),
-            isSelected: _selectedAppLanguage == 'English',
-            onTap: () {
-              setState(() => _selectedAppLanguage = 'English');
-              ref.read(appLanguageProvider.notifier).setLanguage('English');
-            },
+      content: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildLanguageOption(
+                lang: LanguageConfig.supportedLanguages.firstWhere((l) => l.name == 'English'),
+                isSelected: _selectedAppLanguage == 'English',
+                onTap: () {
+                  setState(() => _selectedAppLanguage = 'English');
+                  ref.read(appLanguageProvider.notifier).setLanguage('English');
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildLanguageOption(
+                lang: LanguageConfig.supportedLanguages.firstWhere((l) => l.name == 'Thai'),
+                isSelected: _selectedAppLanguage == 'Thai',
+                onTap: () {
+                  setState(() => _selectedAppLanguage = 'Thai');
+                  ref.read(appLanguageProvider.notifier).setLanguage('Thai');
+                },
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          _buildLanguageOption(
-            lang: LanguageConfig.supportedLanguages.firstWhere((l) => l.name == 'Thai'),
-            isSelected: _selectedAppLanguage == 'Thai',
-            onTap: () {
-              setState(() => _selectedAppLanguage = 'Thai');
-              ref.read(appLanguageProvider.notifier).setLanguage('Thai');
-            },
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -192,21 +192,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return _buildStepContainer(
       title: locale.learnLanguage,
       subtitle: locale.learnLanguageSub,
-
-      content: SizedBox(
-        height: 300,
-        child: ListView.separated(
-          itemCount: LanguageConfig.supportedLanguages.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final lang = LanguageConfig.supportedLanguages[index];
-            return _buildLanguageOption(
-              lang: lang,
-              isSelected: _selectedTargetLanguage == lang.name,
-              onTap: () => setState(() => _selectedTargetLanguage = lang.name),
-            );
-          },
-        ),
+      content: ListView.separated(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: LanguageConfig.supportedLanguages.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final lang = LanguageConfig.supportedLanguages[index];
+          return _buildLanguageOption(
+            lang: lang,
+            isSelected: _selectedTargetLanguage == lang.name,
+            onTap: () => setState(() => _selectedTargetLanguage = lang.name),
+          );
+        },
       ),
     );
   }
@@ -215,22 +212,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final locale = ref.read(appLocaleProvider);
     return _buildStepContainer(
       title: locale.motherLanguage,
-      subtitle: '', // Subtitle not specified in locale for this step but can be added
-
-      content: SizedBox(
-        height: 300,
-        child: ListView.separated(
-          itemCount: LanguageConfig.supportedLanguages.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final lang = LanguageConfig.supportedLanguages[index];
-            return _buildLanguageOption(
-              lang: lang,
-              isSelected: _selectedMotherLanguage == lang.name,
-              onTap: () => setState(() => _selectedMotherLanguage = lang.name),
-            );
-          },
-        ),
+      subtitle: '',
+      content: ListView.separated(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: LanguageConfig.supportedLanguages.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final lang = LanguageConfig.supportedLanguages[index];
+          return _buildLanguageOption(
+            lang: lang,
+            isSelected: _selectedMotherLanguage == lang.name,
+            onTap: () => setState(() => _selectedMotherLanguage = lang.name),
+          );
+        },
       ),
     );
   }
@@ -244,6 +238,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       onTap: onTap,
       borderRadius: 20,
       blur: 15,
+      // Performance optimization: only use blur for selected item or if it's the first step
+      useBlur: isSelected || _currentPage == 0,
       color: isSelected ? Colors.white.withOpacity(0.25) : Colors.white.withOpacity(0.05),
       border: Border.all(
         color: isSelected ? Colors.white.withOpacity(0.5) : Colors.white.withOpacity(0.1),
@@ -287,6 +283,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 curve: Curves.easeInOutCubic,
               ),
               borderRadius: 20,
+              useBlur: false, // Optimization for buttons
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Text(
                 locale.back,
@@ -299,6 +296,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           InteractiveGlassContainer(
             onTap: _nextPage,
             borderRadius: 20,
+            useBlur: false, // Optimization for buttons
             color: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
             child: Text(
@@ -311,6 +309,27 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _BackgroundGradient extends StatelessWidget {
+  const _BackgroundGradient();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0F2027),
+            Color(0xFF203A43),
+            Color(0xFF2C5364),
+          ],
+        ),
       ),
     );
   }

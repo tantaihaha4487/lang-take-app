@@ -23,7 +23,6 @@ final historyProvider = StreamProvider<List<ImageRecord>>((ref) {
 
 
 class HistoryScreen extends ConsumerWidget {
-
   const HistoryScreen({Key? key}) : super(key: key);
 
   @override
@@ -32,7 +31,6 @@ class HistoryScreen extends ConsumerWidget {
     final locale = ref.watch(appLocaleProvider);
 
     return Scaffold(
-
       extendBodyBehindAppBar: true,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight),
@@ -49,7 +47,6 @@ class HistoryScreen extends ConsumerWidget {
                 style: const TextStyle(fontWeight: FontWeight.w200, letterSpacing: 1),
               ),
               elevation: 0,
-
               backgroundColor: Colors.white.withOpacity(0.1),
               foregroundColor: Colors.white,
               centerTitle: true,
@@ -57,59 +54,33 @@ class HistoryScreen extends ConsumerWidget {
           ),
         ),
       ),
-
       body: Stack(
         children: [
-          // Background Gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF0F2027),
-                  Color(0xFF203A43),
-                  Color(0xFF2C5364),
-                ],
-              ),
-            ),
+          // Background Gradient - Isolated with RepaintBoundary
+          const RepaintBoundary(
+            child: _HistoryBackground(),
           ),
+          
           historyAsync.when(
             data: (records) {
               if (records.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.photo_library_outlined, size: 64, color: Colors.white.withOpacity(0.3)),
-                      const SizedBox(height: 16),
-                      Text(
-                        locale.noPhotos,
-                        style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16),
-                      ),
-                      Text(
-                        locale.goTakeSome,
-                        style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14),
-                      ),
-                    ],
-
-                  ),
-                );
+                return _buildEmptyState(locale);
               }
 
-              return GridView.builder(
-                padding: const EdgeInsets.fromLTRB(16, kToolbarHeight + 32, 16, 16),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.75,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
+              return RepaintBoundary(
+                child: GridView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, kToolbarHeight + 32, 16, 16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.75,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                  ),
+                  itemCount: records.length,
+                  itemBuilder: (context, index) {
+                    return _HistoryCard(record: records[index], index: index);
+                  },
                 ),
-                itemCount: records.length,
-                itemBuilder: (context, index) {
-                  final record = records[index];
-                  return _HistoryCard(record: record, index: index);
-                },
               );
             },
             loading: () => const Center(
@@ -117,21 +88,44 @@ class HistoryScreen extends ConsumerWidget {
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               ),
             ),
-            error: (err, stack) => Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
-                  const SizedBox(height: 16),
-                  Text('Error: $err', style: const TextStyle(color: Colors.redAccent)),
-                ],
-              ),
-            ),
+            error: (err, stack) => _buildErrorState(err),
           ),
         ],
       ),
     );
+  }
 
+  Widget _buildEmptyState(AppLocale locale) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.photo_library_outlined, size: 64, color: Colors.white.withOpacity(0.3)),
+          const SizedBox(height: 16),
+          Text(
+            locale.noPhotos,
+            style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16),
+          ),
+          Text(
+            locale.goTakeSome,
+            style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(Object err) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
+          const SizedBox(height: 16),
+          Text('Error: $err', style: const TextStyle(color: Colors.redAccent)),
+        ],
+      ),
+    );
   }
 }
 
@@ -159,11 +153,9 @@ class _HistoryCard extends ConsumerWidget {
         );
       },
       child: InteractiveGlassContainer(
-        onTap: () {
-          ttsService.speak(record.subject, language: record.language);
-        },
+        onTap: () => ttsService.speak(record.subject, language: record.language),
         borderRadius: 24,
-        blur: 10,
+        useBlur: false, // Optimization: disable blur for grid items
         scaleOnTap: 0.96,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,41 +180,7 @@ class _HistoryCard extends ConsumerWidget {
                   Positioned(
                     top: 8,
                     right: 8,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.4),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white.withOpacity(0.1)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                LanguageConfig.supportedLanguages
-                                    .firstWhere((l) => l.name == record.language,
-                                        orElse: () => LanguageConfig.supportedLanguages.first)
-                                    .flag,
-                                style: const TextStyle(fontSize: 10),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                record.language,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w200,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                    child: _buildLanguageBadge(),
                   ),
                 ],
               ),
@@ -237,45 +195,8 @@ class _HistoryCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                record.subject,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w200, 
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              if (record.translation != null)
-                                Text(
-                                  record.translation!,
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.6),
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                            ],
-                          ),
-                        ),
-
-                        // 4. Audio Button (Now redundant as card is clickable, but kept for visual)
-                        Icon(Icons.volume_up, color: Colors.white.withOpacity(0.5), size: 18),
-                      ],
-                    ),
-                    // 5. Date
-                    Text(
-                      "${record.createdAt.day}/${record.createdAt.month}/${record.createdAt.year}",
-                      style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10),
-                    ),
+                    _buildTextInfo(),
+                    _buildDateInfo(),
                   ],
                 ),
               ),
@@ -284,8 +205,88 @@ class _HistoryCard extends ConsumerWidget {
         ),
       ),
     );
+  }
 
+  Widget _buildLanguageBadge() {
+    final langData = LanguageConfig.supportedLanguages.firstWhere(
+      (l) => l.name == record.language,
+      orElse: () => LanguageConfig.supportedLanguages.first,
+    );
 
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(langData.flag, style: const TextStyle(fontSize: 10)),
+          const SizedBox(width: 4),
+          Text(
+            record.language,
+            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w200),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextInfo() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                record.subject,
+                style: const TextStyle(fontWeight: FontWeight.w200, fontSize: 16, color: Colors.white),
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (record.translation != null)
+                Text(
+                  record.translation!,
+                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12, fontStyle: FontStyle.italic),
+                  overflow: TextOverflow.ellipsis,
+                ),
+            ],
+          ),
+        ),
+        Icon(Icons.volume_up, color: Colors.white.withOpacity(0.5), size: 18),
+      ],
+    );
+  }
+
+  Widget _buildDateInfo() {
+    return Text(
+      "${record.createdAt.day}/${record.createdAt.month}/${record.createdAt.year}",
+      style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10),
+    );
+  }
+}
+
+class _HistoryBackground extends StatelessWidget {
+  const _HistoryBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0F2027),
+            Color(0xFF203A43),
+            Color(0xFF2C5364),
+          ],
+        ),
+      ),
+    );
   }
 }
 

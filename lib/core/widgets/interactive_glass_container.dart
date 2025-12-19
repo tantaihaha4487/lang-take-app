@@ -10,6 +10,7 @@ class InteractiveGlassContainer extends StatefulWidget {
   final Border? border;
   final EdgeInsetsGeometry? padding;
   final double scaleOnTap;
+  final bool useBlur;
 
   const InteractiveGlassContainer({
     Key? key,
@@ -21,6 +22,7 @@ class InteractiveGlassContainer extends StatefulWidget {
     this.border,
     this.padding,
     this.scaleOnTap = 0.95,
+    this.useBlur = true,
   }) : super(key: key);
 
   @override
@@ -63,28 +65,41 @@ class _InteractiveGlassContainerState extends State<InteractiveGlassContainer> w
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: _handleTapDown,
-      onTapUp: _handleTapUp,
-      onTapCancel: _handleTapCancel,
-      onTap: widget.onTap,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(widget.borderRadius),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: widget.blur, sigmaY: widget.blur),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: widget.padding,
-              decoration: BoxDecoration(
-                color: widget.color ?? Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(widget.borderRadius),
-                border: widget.border ?? Border.all(color: Colors.white.withOpacity(0.2)),
-              ),
-              child: widget.child,
-            ),
-          ),
+    Widget content = AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: widget.padding,
+      decoration: BoxDecoration(
+        color: widget.color ?? Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(widget.borderRadius),
+        border: widget.border ?? Border.all(color: Colors.white.withOpacity(0.2)),
+      ),
+      child: widget.child,
+    );
+
+    if (widget.useBlur) {
+      content = ClipRRect(
+        borderRadius: BorderRadius.circular(widget.borderRadius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: widget.blur, sigmaY: widget.blur),
+          child: content,
+        ),
+      );
+    } else {
+      content = ClipRRect(
+        borderRadius: BorderRadius.circular(widget.borderRadius),
+        child: content,
+      );
+    }
+
+    return RepaintBoundary(
+      child: GestureDetector(
+        onTapDown: _handleTapDown,
+        onTapUp: _handleTapUp,
+        onTapCancel: _handleTapCancel,
+        onTap: widget.onTap,
+        child: ScaleTransition(
+          scale: _scaleAnimation,
+          child: content,
         ),
       ),
     );

@@ -28,12 +28,12 @@ class GeminiService {
     final promptText = '''
       Identify the main subject/object in this picture. 
       1. Provide the name of the subject/object in $targetLanguage.
-      2. Provide the translation of that name in $motherLanguage.
+      2. Provide the translation of that name to $motherLanguage.
       
       Return the response as a JSON object with the following structure:
       {
         "subject": "The name of the subject/object in $targetLanguage",
-        "translation": "The translation of the subject/object in $motherLanguage",
+        "translation": "The translation of the subject/object to $motherLanguage",
         "language": "$targetLanguage"
       }
       Do not include markdown formatting like ```json. Just the raw JSON string.

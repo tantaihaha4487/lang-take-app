@@ -41,8 +41,6 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
   double _baseScale = 1.0;
 
   final ImagePicker _imagePicker = ImagePicker();
-  
-  final List<String> _languages = LanguageConfig.names;
 
 
   @override
@@ -180,7 +178,6 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
   Widget build(BuildContext context) {
     final cameraState = ref.watch(cameraViewModelProvider);
     final viewModel = ref.read(cameraViewModelProvider.notifier);
-    final locale = ref.watch(appLocaleProvider);
 
     // Fallback UI for Linux/No Camera
     if (_cameraNotSupported) {
@@ -200,75 +197,75 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Layer 0: Background Gradient (to make glass pop)
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF0F2027),
-                  Color(0xFF203A43),
-                  Color(0xFF2C5364),
-                ],
-              ),
-            ),
+          // Layer 0: Background Gradient
+          const RepaintBoundary(
+            child: _CameraBackground(),
           ),
           
           // Layer 1: Camera Preview or Captured Image
-          if (cameraState.isReviewing && cameraState.capturedImage != null)
-            Image.memory(cameraState.capturedImage!, fit: BoxFit.cover)
-          else
-            GestureDetector(
-              onScaleStart: _handleScaleStart,
-              onScaleUpdate: _handleScaleUpdate,
-              onTapUp: _onTapUp,
-              child: CameraPreview(_controller!),
-            ),
+          RepaintBoundary(
+            child: _buildMainContent(cameraState),
+          ),
           
           // Layer 2: UI Overlays
           SafeArea(
             child: Column(
               children: [
-                // Top Bar: Language Selector
                 _buildTopBar(cameraState, viewModel),
-                
                 const Spacer(),
-                
-                // Bottom Area: Controls or Results
-                if (cameraState.isAnalyzing)
-                  _buildLoadingIndicator()
-                else if (cameraState.identifiedResult != null)
-                  _buildResultCard(cameraState, viewModel)
-                else if (cameraState.isReviewing)
-                  _buildReviewControls(viewModel)
-                else
-                  _buildCaptureControl(viewModel),
+                _buildBottomArea(cameraState, viewModel),
               ],
             ),
           ),
 
-          
           // Error Message Toast
           if (cameraState.errorMessage != null)
-            Positioned(
-              top: 100,
-              left: 20,
-              right: 20,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  cameraState.errorMessage!,
-                  style: const TextStyle(color: Colors.white),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
+            _buildErrorToast(cameraState.errorMessage!),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMainContent(CameraState cameraState) {
+    if (cameraState.isReviewing && cameraState.capturedImage != null) {
+      return Image.memory(cameraState.capturedImage!, fit: BoxFit.cover);
+    }
+    return GestureDetector(
+      onScaleStart: _handleScaleStart,
+      onScaleUpdate: _handleScaleUpdate,
+      onTapUp: _onTapUp,
+      child: CameraPreview(_controller!),
+    );
+  }
+
+  Widget _buildBottomArea(CameraState cameraState, CameraViewModel viewModel) {
+    if (cameraState.isAnalyzing) {
+      return _buildLoadingIndicator();
+    } else if (cameraState.identifiedResult != null) {
+      return _buildResultCard(cameraState, viewModel);
+    } else if (cameraState.isReviewing) {
+      return _buildReviewControls(viewModel);
+    } else {
+      return _buildCaptureControl(viewModel);
+    }
+  }
+
+  Widget _buildErrorToast(String message) {
+    return Positioned(
+      top: 100,
+      left: 20,
+      right: 20,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.red.withOpacity(0.8),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          message,
+          style: const TextStyle(color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
@@ -286,12 +283,11 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
             locale.learnPrompt,
             style: const TextStyle(color: Colors.white70, fontSize: 16),
           ),
-
           DropdownButton<String>(
             value: state.targetLanguage,
             dropdownColor: Colors.black.withOpacity(0.8),
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w200, fontSize: 16),
-            underline: Container(),
+            underline: const SizedBox.shrink(),
             icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
             items: LanguageConfig.supportedLanguages.map((AppLanguage lang) {
               return DropdownMenuItem<String>(
@@ -321,112 +317,13 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
     );
   }
 
-
-
   void _showSettingsDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) {
-        return Consumer(
-          builder: (context, ref, child) {
-            final motherLang = ref.watch(motherLanguageProvider);
-            final appLang = ref.watch(appLanguageProvider);
-            final locale = ref.watch(appLocaleProvider);
-            final config = ref.watch(appConfigProvider);
-
-            return AlertDialog(
-              title: Text(locale.settings),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('${locale.motherLanguage}:'),
-                  const SizedBox(height: 8),
-                  DropdownButton<String>(
-                    isExpanded: true,
-                    value: motherLang,
-                    items: LanguageConfig.supportedLanguages.map((AppLanguage lang) {
-                      return DropdownMenuItem<String>(
-                        value: lang.name,
-                        child: Row(
-                          children: [
-                            Text(lang.flag),
-                            const SizedBox(width: 8),
-                            Text(lang.name),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      if (newValue != null) {
-                        ref.read(motherLanguageProvider.notifier).setLanguage(newValue);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  Text('${locale.appLanguage}:'),
-                  const SizedBox(height: 8),
-                  DropdownButton<String>(
-                    isExpanded: true,
-                    value: appLang,
-                    items: ['English', 'Thai'].map((String lang) {
-                      final langData = LanguageConfig.supportedLanguages.firstWhere((l) => l.name == lang);
-                      return DropdownMenuItem<String>(
-                        value: lang,
-                        child: Row(
-                          children: [
-                            Text(langData.flag),
-                            const SizedBox(width: 8),
-                            Text(lang),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      if (newValue != null) {
-                        ref.read(appLanguageProvider.notifier).setLanguage(newValue);
-                      }
-                    },
-                  ),
-                  if (config.showResetOnboarding) ...[
-                    const SizedBox(height: 24),
-                    const Divider(),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          await ref.read(settingsServiceProvider).resetFirstTime();
-                          if (context.mounted) {
-                            Navigator.pop(context); // Close dialog
-                            Navigator.pushReplacementNamed(context, '/onboarding');
-                          }
-                        },
-                        icon: const Icon(Icons.refresh, color: Colors.redAccent),
-                        label: Text(locale.resetOnboarding, style: const TextStyle(color: Colors.redAccent)),
-                        style: OutlinedButton.styleFrom(
-
-                          side: const BorderSide(color: Colors.redAccent),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-
-
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(locale.close),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (context) => const _SettingsDialog(),
     );
   }
+
 
 
   Widget _buildCaptureControl(CameraViewModel viewModel) {
@@ -829,6 +726,133 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _CameraBackground extends StatelessWidget {
+  const _CameraBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0F2027),
+            Color(0xFF203A43),
+            Color(0xFF2C5364),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsDialog extends ConsumerWidget {
+  const _SettingsDialog();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final motherLang = ref.watch(motherLanguageProvider);
+    final appLang = ref.watch(appLanguageProvider);
+    final locale = ref.watch(appLocaleProvider);
+    final config = ref.watch(appConfigProvider);
+
+    return AlertDialog(
+      title: Text(locale.settings),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('${locale.motherLanguage}:'),
+          const SizedBox(height: 8),
+          _buildLanguageDropdown(
+            value: motherLang,
+            onChanged: (val) => ref.read(motherLanguageProvider.notifier).setLanguage(val!),
+          ),
+          const SizedBox(height: 16),
+          Text('${locale.appLanguage}:'),
+          const SizedBox(height: 8),
+          _buildAppLanguageDropdown(
+            value: appLang,
+            onChanged: (val) => ref.read(appLanguageProvider.notifier).setLanguage(val!),
+          ),
+          if (config.showResetOnboarding) ...[
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
+            _buildResetButton(context, ref, locale),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(locale.close),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLanguageDropdown({required String value, required ValueChanged<String?> onChanged}) {
+    return DropdownButton<String>(
+      isExpanded: true,
+      value: value,
+      items: LanguageConfig.supportedLanguages.map((lang) {
+        return DropdownMenuItem(
+          value: lang.name,
+          child: Row(
+            children: [
+              Text(lang.flag),
+              const SizedBox(width: 8),
+              Text(lang.name),
+            ],
+          ),
+        );
+      }).toList(),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildAppLanguageDropdown({required String value, required ValueChanged<String?> onChanged}) {
+    return DropdownButton<String>(
+      isExpanded: true,
+      value: value,
+      items: ['English', 'Thai'].map((lang) {
+        final langData = LanguageConfig.supportedLanguages.firstWhere((l) => l.name == lang);
+        return DropdownMenuItem(
+          value: lang,
+          child: Row(
+            children: [
+              Text(langData.flag),
+              const SizedBox(width: 8),
+              Text(lang),
+            ],
+          ),
+        );
+      }).toList(),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildResetButton(BuildContext context, WidgetRef ref, AppLocale locale) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: () async {
+          await ref.read(settingsServiceProvider).resetFirstTime();
+          if (context.mounted) {
+            Navigator.pop(context);
+            Navigator.pushReplacementNamed(context, '/onboarding');
+          }
+        },
+        icon: const Icon(Icons.refresh, color: Colors.redAccent),
+        label: Text(locale.resetOnboarding, style: const TextStyle(color: Colors.redAccent)),
+        style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.redAccent)),
       ),
     );
   }
