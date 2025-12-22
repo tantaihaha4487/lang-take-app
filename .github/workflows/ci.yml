@@ -21,9 +21,9 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2.16.0
         with:
-          flutter-version: 'stable'
+          channel: 'stable'
 
       - run: flutter --version
       # run flutter upgrade in CI (optional but recommended when SDK constraint requires specific Dart patch)
@@ -46,10 +46,9 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2.16.0
         with:
-          flutter-version: 'stable'
-          dart-version: 'stable'
+          channel: 'stable'
       - run: flutter --version
       - run: flutter pub get
       - run: flutter clean
@@ -61,6 +60,10 @@ jobs:
           ln -s ../Runner.app
           cd ..
           zip -r app.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: build/ios/iphoneos/app.ipa
 
   build_androidApk:
     name: Build Flutter App (Android)
@@ -74,9 +77,9 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2.16.0
         with:
-          flutter-version: 'stable'
+          channel: 'stable'
 
       - run: flutter --version
       - run: flutter pub get
@@ -95,8 +98,7 @@ jobs:
         shell: bash
 
       - run: flutter build apk --debug
-      - uses: ncipollo/release-action@v1
+      - uses: actions/upload-artifact@v4
         with:
-          artifacts: "build/app/outputs/apk/debug/*"
-          tag: v1.0.${{ github.run_number }}
-          token: ${{ secrets.TOKEN }}
+          name: android-apk
+          path: build/app/outputs/apk/debug/app-debug.apk
