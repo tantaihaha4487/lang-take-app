@@ -65,7 +65,7 @@ final Map<String, AppLocale> supportedLocales = {
     album: 'Album',
     settings: 'Settings',
     motherLanguage: 'Translate back to',
-    learnLanguage: 'What language you wanna learn?',
+    learnLanguage: 'What language you want to learn?',
     learnLanguageSub: 'You can change this anytime later',
     appLanguage: 'App Language',
     appLanguageSub: 'Select your preferred interface language',
@@ -79,7 +79,7 @@ final Map<String, AppLocale> supportedLocales = {
     noPhotos: 'No photos yet.',
     goTakeSome: 'Go take some!',
     close: 'Close',
-    learnPrompt: 'I want to learn: ',
+    learnPrompt: 'I want to learn ',
     subjectLabel: 'Subject',
     translationLabel: 'Translation',
     resetOnboarding: 'Reset Onboarding',
@@ -106,7 +106,7 @@ final Map<String, AppLocale> supportedLocales = {
     noPhotos: 'ยังไม่มีรูปภาพ',
     goTakeSome: 'ลองถ่ายรูปดูสิ!',
     close: 'ปิด',
-    learnPrompt: 'อยากเรียนภาษา: ',
+    learnPrompt: 'อยากเรียนภาษา ',
     subjectLabel: 'สิ่งที่เห็น',
     translationLabel: 'คำแปล',
     resetOnboarding: 'รีเซ็ตการตั้งค่าเริ่มต้น',
@@ -120,4 +120,3 @@ final appLocaleProvider = Provider<AppLocale>((ref) {
   return supportedLocales[language] ?? supportedLocales['English']!;
 });
 
-// We'll need an appLanguageProvider in SettingsService

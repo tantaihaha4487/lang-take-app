@@ -26,17 +26,22 @@ class GeminiService {
     String motherLanguage,
   ) async {
     final promptText = '''
-      Identify the main subject/object in this picture. 
-      1. Provide the name of the subject/object in $targetLanguage.
-      2. Provide the translation of that name to $motherLanguage.
-      
-      Return the response as a JSON object with the following structure:
-      {
-        "subject": "The name of the subject/object in $targetLanguage",
-        "translation": "The translation of the subject/object to $motherLanguage",
-        "language": "$targetLanguage"
-      }
-      Do not include markdown formatting like ```json. Just the raw JSON string.
+        Analyze the image to identify the main subject/object.
+
+        1. Identify the name of the subject in "$targetLanguage".
+        2. Translate that specific meaning into "$motherLanguage".
+
+        CRITICAL TRANSLATION RULES:
+        - The value for "translation" MUST be written in the script/alphabet of "$motherLanguage".
+        - Do NOT simply copy the "$targetLanguage" word.
+        - If the word is a loanword, provide the standard transliteration in "$motherLanguage".
+
+        Return ONLY the raw JSON string (no markdown formatting):
+        {
+          "subject": "The name in $targetLanguage",
+          "translation": "The translation in $motherLanguage",
+          "language": "$targetLanguage"
+        }
     ''';
 
 
