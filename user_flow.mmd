@@ -1,56 +1,56 @@
 flowchart TD
-    Start([App Start]) --> CheckFirstTime{Is First Time?}
+    Start([เริ่มต้นแอป]) --> CheckFirstTime{ใช้งานครั้งแรก?}
 
     %% Onboarding Flow
-    CheckFirstTime -- Yes --> OnboardingStart[Onboarding Screen]
-    OnboardingStart --> SelectAppLang[Select App Language]
-    SelectAppLang --> SelectTargetLang[Select Target Language]
-    SelectTargetLang --> SelectMotherLang[Select Mother Language]
-    SelectMotherLang --> CompleteOnboarding[Complete & Save Settings]
+    CheckFirstTime -- ใช่ --> OnboardingStart[หน้าแนะนำการใช้งาน]
+    OnboardingStart --> SelectAppLang[เลือกภาษาของแอป]
+    SelectAppLang --> SelectTargetLang[เลือกภาษาที่ต้องการเรียน]
+    SelectTargetLang --> SelectMotherLang[เลือกภาษาแม่]
+    SelectMotherLang --> CompleteOnboarding[เสร็จสิ้น & บันทึกการตั้งค่า]
     CompleteOnboarding --> MainScreen
 
     %% Main Screen & Navigation
-    CheckFirstTime -- No --> MainScreen[Main Screen]
+    CheckFirstTime -- ไม่ --> MainScreen[หน้าหลัก]
 
-    subgraph MainScreenUI [Main Screen Navigation]
+    subgraph MainScreenUI [การนำทางหน้าหลัก]
         direction LR
-        CameraTab[Camera Screen]
-        HistoryTab[History Screen]
+        CameraTab[หน้ากล้อง]
+        HistoryTab[หน้าประวัติ]
     end
 
     MainScreen --> CameraTab
 
     %% Camera Flow
-    subgraph CameraFlow [Camera Screen]
-        Preview[Live Camera Preview]
+    subgraph CameraFlow [หน้ากล้อง]
+        Preview[แสดงภาพจากกล้องสด]
 
         %% Top Bar Actions
-        Preview -- Click Settings --> SettingsDialog[Settings Dialog]
-        SettingsDialog -- Reset Onboarding --> OnboardingStart
-        SettingsDialog -- Close --> Preview
-        Preview -- Change Target Lang --> UpdateLang[Update Target Language]
+        Preview -- กดการตั้งค่า --> SettingsDialog[หน้าต่างตั้งค่า]
+        SettingsDialog -- รีเซ็ตการแนะนำ --> OnboardingStart
+        SettingsDialog -- ปิด --> Preview
+        Preview -- เปลี่ยนภาษาที่เรียน --> UpdateLang[อัปเดตภาษาที่เรียน]
 
         %% Bottom Bar Actions
-        Preview -- Tap Capture --> Review[Review Captured Image]
-        Preview -- Tap Upload --> GalleryPicker[Pick Image from Gallery]
-        Preview -- Tap Album --> HistoryTab
+        Preview -- กดถ่ายภาพ --> Review[ตรวจสอบภาพที่ถ่าย]
+        Preview -- กดอัปโหลด --> GalleryPicker[เลือกรูปจากแกลเลอรี]
+        Preview -- กดอัลบั้ม --> HistoryTab
 
         %% Review Logic
-        GalleryPicker -- Image Selected --> Review
-        Review -- Retake --> Preview
-        Review -- Identify --> Analyzing[Analyzing w/ Gemini AI]
+        GalleryPicker -- เลือกรูปแล้ว --> Review
+        Review -- ถ่ายใหม่ --> Preview
+        Review -- ระบุวัตถุ --> Analyzing[กำลังวิเคราะห์ด้วย Gemini AI]
 
-        Analyzing -- Success --> Result[Result Card]
-        Result -- Tap Speak --> TTS[Text-to-Speech]
-        Result -- Tap New Capture --> Preview
-        Result -- Tap Close --> Review
+        Analyzing -- สำเร็จ --> Result[การ์ดผลลัพธ์]
+        Result -- กดฟังเสียง --> TTS[อ่านออกเสียง - TTS]
+        Result -- กดถ่ายภาพใหม่ --> Preview
+        Result -- กดปิด --> Review
     end
 
     %% History Flow
-    subgraph HistoryFlow [History Screen]
-        HistoryList[Grid of Records]
-        HistoryList -- Tap Record --> PlayTTS[Play Audio]
-        HistoryList -- Tap Camera Icon --> CameraTab
+    subgraph HistoryFlow [หน้าประวัติ]
+        HistoryList[ตารางประวัติ]
+        HistoryList -- กดที่รายการ --> PlayTTS[เล่นเสียง]
+        HistoryList -- กดไอคอนกล้อง --> CameraTab
     end
 
     %% Styles
