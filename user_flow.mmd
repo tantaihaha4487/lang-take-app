@@ -1,0 +1,65 @@
+flowchart TD
+    Start([App Start]) --> CheckFirstTime{Is First Time?}
+
+    %% Onboarding Flow
+    CheckFirstTime -- Yes --> OnboardingStart[Onboarding Screen]
+    OnboardingStart --> SelectAppLang[Select App Language]
+    SelectAppLang --> SelectTargetLang[Select Target Language]
+    SelectTargetLang --> SelectMotherLang[Select Mother Language]
+    SelectMotherLang --> CompleteOnboarding[Complete & Save Settings]
+    CompleteOnboarding --> MainScreen
+
+    %% Main Screen & Navigation
+    CheckFirstTime -- No --> MainScreen[Main Screen]
+
+    subgraph MainScreenUI [Main Screen Navigation]
+        direction LR
+        CameraTab[Camera Screen]
+        HistoryTab[History Screen]
+    end
+
+    MainScreen --> CameraTab
+
+    %% Camera Flow
+    subgraph CameraFlow [Camera Screen]
+        Preview[Live Camera Preview]
+
+        %% Top Bar Actions
+        Preview -- Click Settings --> SettingsDialog[Settings Dialog]
+        SettingsDialog -- Reset Onboarding --> OnboardingStart
+        SettingsDialog -- Close --> Preview
+        Preview -- Change Target Lang --> UpdateLang[Update Target Language]
+
+        %% Bottom Bar Actions
+        Preview -- Tap Capture --> Review[Review Captured Image]
+        Preview -- Tap Upload --> GalleryPicker[Pick Image from Gallery]
+        Preview -- Tap Album --> HistoryTab
+
+        %% Review Logic
+        GalleryPicker -- Image Selected --> Review
+        Review -- Retake --> Preview
+        Review -- Identify --> Analyzing[Analyzing w/ Gemini AI]
+
+        Analyzing -- Success --> Result[Result Card]
+        Result -- Tap Speak --> TTS[Text-to-Speech]
+        Result -- Tap New Capture --> Preview
+        Result -- Tap Close --> Review
+    end
+
+    %% History Flow
+    subgraph HistoryFlow [History Screen]
+        HistoryList[Grid of Records]
+        HistoryList -- Tap Record --> PlayTTS[Play Audio]
+        HistoryList -- Tap Camera Icon --> CameraTab
+    end
+
+    %% Styles
+    classDef start fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef process fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:2px;
+    classDef screen fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+
+    class Start,OnboardingStart,MainScreen start;
+    class CheckFirstTime decision;
+    class SelectAppLang,SelectTargetLang,SelectMotherLang,CompleteOnboarding process;
+    class CameraTab,HistoryTab screen;
