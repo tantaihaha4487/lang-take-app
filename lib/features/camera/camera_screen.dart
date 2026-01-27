@@ -286,7 +286,11 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
           DropdownButton<String>(
             value: state.targetLanguage,
             dropdownColor: Colors.black.withOpacity(0.8),
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w200, fontSize: 16),
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: Theme.of(context).textTheme.bodyLarge?.fontWeight,
+              fontSize: 16,
+            ),
             underline: const SizedBox.shrink(),
             icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
             items: LanguageConfig.supportedLanguages.map((AppLanguage lang) {
@@ -421,6 +425,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
             icon: Icons.refresh,
             label: locale.retake,
             isPrimary: false,
+            context: context,
           ),
           _buildGlassButton(
             onPressed: () {
@@ -430,6 +435,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
             icon: Icons.auto_awesome,
             label: locale.identify,
             isPrimary: true,
+            context: context,
           ),
 
         ],
@@ -442,6 +448,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
     required IconData icon,
     required String label,
     required bool isPrimary,
+    required BuildContext context,
   }) {
     return InteractiveGlassContainer(
       onTap: onPressed,
@@ -458,7 +465,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
               label,
               style: TextStyle(
                 color: isPrimary ? Colors.black : Colors.white,
-                fontWeight: FontWeight.w200,
+                fontWeight: Theme.of(context).textTheme.bodyLarge?.fontWeight,
               ),
             ),
           ],
@@ -479,7 +486,11 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
           const SizedBox(height: 16),
           Text(
             locale.analyzing,
-            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w200),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: Theme.of(context).textTheme.bodyLarge?.fontWeight,
+            ),
           ),
         ],
       ),
@@ -529,7 +540,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.6),
                         fontSize: 12,
-                        fontWeight: FontWeight.w200,
+                        fontWeight: Theme.of(context).textTheme.bodySmall?.fontWeight,
                         letterSpacing: 2,
                       ),
                     ),
@@ -547,10 +558,10 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                               ),
                               Text(
                                 subject,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 28,
-                                  fontWeight: FontWeight.w200,
+                                  fontWeight: Theme.of(context).textTheme.displayLarge?.fontWeight,
                                 ),
                               ),
                               if (translation != null) ...[
@@ -587,9 +598,9 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                       child: Center(
                         child: Text(
                           locale.newCapture,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.black,
-                            fontWeight: FontWeight.w200,
+                            fontWeight: Theme.of(context).textTheme.bodyLarge?.fontWeight,
                             fontSize: 18,
                           ),
                         ),
@@ -759,6 +770,7 @@ class _SettingsDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final motherLang = ref.watch(motherLanguageProvider);
     final appLang = ref.watch(appLanguageProvider);
+    final currentWeight = ref.watch(fontWeightProvider);
     final locale = ref.watch(appLocaleProvider);
     final config = ref.watch(appConfigProvider);
 
@@ -781,6 +793,10 @@ class _SettingsDialog extends ConsumerWidget {
             value: appLang,
             onChanged: (val) => ref.read(appLanguageProvider.notifier).setLanguage(val!),
           ),
+          const SizedBox(height: 16),
+          Text('${locale.fontWeightLabel}:'),
+          const SizedBox(height: 8),
+          _buildWeightSelector(ref, currentWeight),
           if (config.showResetOnboarding) ...[
             const SizedBox(height: 24),
             const Divider(),
@@ -836,6 +852,20 @@ class _SettingsDialog extends ConsumerWidget {
         );
       }).toList(),
       onChanged: onChanged,
+    );
+  }
+
+  Widget _buildWeightSelector(WidgetRef ref, int currentWeight) {
+    return SegmentedButton<int>(
+      segments: const [
+        ButtonSegment(value: 200, label: Text('200')),
+        ButtonSegment(value: 500, label: Text('500')),
+        ButtonSegment(value: 700, label: Text('700')),
+      ],
+      selected: {currentWeight},
+      onSelectionChanged: (newSelection) {
+        ref.read(fontWeightProvider.notifier).setWeight(newSelection.first);
+      },
     );
   }
 

@@ -127,10 +127,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
               fontSize: 28,
-              fontWeight: FontWeight.w200,
+              fontWeight: Theme.of(context).textTheme.displayLarge?.fontWeight,
               letterSpacing: -0.5,
             ),
             textAlign: TextAlign.center,
@@ -258,7 +258,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             style: TextStyle(
               color: Colors.white,
               fontSize: 18,
-              fontWeight: isSelected ? FontWeight.w200 : FontWeight.normal,
+              fontWeight: isSelected ? Theme.of(context).textTheme.bodyLarge?.fontWeight : FontWeight.normal,
             ),
           ),
           const Spacer(),
@@ -287,7 +287,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Text(
                 locale.back,
-                style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w200),
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontWeight: Theme.of(context).textTheme.bodyLarge?.fontWeight,
+                ),
               ),
             )
           else
@@ -301,9 +304,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
             child: Text(
               _currentPage == 2 ? locale.getStarted : locale.next,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.black,
-                fontWeight: FontWeight.w200,
+                fontWeight: Theme.of(context).textTheme.bodyLarge?.fontWeight,
                 fontSize: 16,
               ),
             ),

@@ -44,7 +44,10 @@ class HistoryScreen extends ConsumerWidget {
               ),
               title: Text(
                 locale.album,
-                style: const TextStyle(fontWeight: FontWeight.w200, letterSpacing: 1),
+                style: TextStyle(
+                  fontWeight: Theme.of(context).textTheme.titleLarge?.fontWeight,
+                  letterSpacing: 1,
+                ),
               ),
               elevation: 0,
               backgroundColor: Colors.white.withOpacity(0.1),
@@ -180,7 +183,7 @@ class _HistoryCard extends ConsumerWidget {
                   Positioned(
                     top: 8,
                     right: 8,
-                    child: _buildLanguageBadge(),
+                    child: _buildLanguageBadge(context),
                   ),
                 ],
               ),
@@ -195,7 +198,7 @@ class _HistoryCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildTextInfo(),
+                    _buildTextInfo(context),
                     _buildDateInfo(),
                   ],
                 ),
@@ -207,7 +210,7 @@ class _HistoryCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildLanguageBadge() {
+  Widget _buildLanguageBadge(BuildContext context) {
     final langData = LanguageConfig.supportedLanguages.firstWhere(
       (l) => l.name == record.language,
       orElse: () => LanguageConfig.supportedLanguages.first,
@@ -227,14 +230,18 @@ class _HistoryCard extends ConsumerWidget {
           const SizedBox(width: 4),
           Text(
             record.language,
-            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w200),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: Theme.of(context).textTheme.bodySmall?.fontWeight,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTextInfo() {
+  Widget _buildTextInfo(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -244,7 +251,11 @@ class _HistoryCard extends ConsumerWidget {
             children: [
               Text(
                 record.subject,
-                style: const TextStyle(fontWeight: FontWeight.w200, fontSize: 16, color: Colors.white),
+                style: TextStyle(
+                  fontWeight: Theme.of(context).textTheme.bodyLarge?.fontWeight,
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
               if (record.translation != null)
