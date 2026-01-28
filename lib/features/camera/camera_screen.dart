@@ -876,6 +876,7 @@ class _SettingsDialog extends ConsumerWidget {
         ButtonSegment(value: 700, label: Text('700')),
       ],
       selected: {currentWeight},
+      showSelectedIcon: false,
       onSelectionChanged: (newSelection) {
         ref.read(fontWeightProvider.notifier).setWeight(newSelection.first);
       },
@@ -886,6 +887,8 @@ class _SettingsDialog extends ConsumerWidget {
           }
           return Theme.of(ref.context).colorScheme.surfaceContainerHighest;
         }),
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+        splashFactory: NoSplash.splashFactory,
       ),
     );
   }
@@ -897,6 +900,7 @@ class _SettingsDialog extends ConsumerWidget {
         ButtonSegment(value: true, label: Text('Light'), icon: Icon(Icons.light_mode)),
       ],
       selected: {isLightMode},
+      showSelectedIcon: false,
       onSelectionChanged: (newSelection) {
         ref.read(themeModeProvider.notifier).setLightMode(newSelection.first);
       },
@@ -907,9 +911,12 @@ class _SettingsDialog extends ConsumerWidget {
           }
           return Theme.of(ref.context).colorScheme.surfaceContainerHighest;
         }),
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+        splashFactory: NoSplash.splashFactory,
       ),
     );
   }
+
 
   Widget _buildResetButton(BuildContext context, WidgetRef ref, AppLocale locale) {
     return SizedBox(
