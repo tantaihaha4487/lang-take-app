@@ -8,6 +8,7 @@ class SettingsService {
   static const String _targetLanguageKey = 'target_language';
   static const String _appLanguageKey = 'app_language';
   static const String _isFirstTimeKey = 'is_first_time';
+  static const String _fontWeightKey = 'font_weight';
 
 
 
@@ -57,6 +58,16 @@ class SettingsService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_isFirstTimeKey, true);
   }
+
+  Future<int> getFontWeight() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_fontWeightKey) ?? 200;
+  }
+
+  Future<void> setFontWeight(int weight) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_fontWeightKey, weight);
+  }
 }
 
 
@@ -80,6 +91,27 @@ class MotherLanguageNotifier extends StateNotifier<String> {
   Future<void> setLanguage(String language) async {
     await _settingsService.setMotherLanguage(language);
     state = language;
+  }
+}
+
+final fontWeightProvider = StateNotifierProvider<FontWeightNotifier, int>((ref) {
+  return FontWeightNotifier(ref.read(settingsServiceProvider));
+});
+
+class FontWeightNotifier extends StateNotifier<int> {
+  final SettingsService _settingsService;
+
+  FontWeightNotifier(this._settingsService) : super(200) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    state = await _settingsService.getFontWeight();
+  }
+
+  Future<void> setWeight(int weight) async {
+    await _settingsService.setFontWeight(weight);
+    state = weight;
   }
 }
 

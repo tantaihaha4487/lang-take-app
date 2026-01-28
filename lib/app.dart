@@ -17,11 +17,14 @@ class LangTakeApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final onboardingAsync = ref.watch(onboardingStatusProvider);
+    final weightValue = ref.watch(fontWeightProvider);
+
+    final fontWeight = _getFontWeight(weightValue);
 
     return MaterialApp(
       title: 'LangTake Mobile',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.getTheme(fontWeight),
       home: onboardingAsync.when(
         data: (isFirstTime) => isFirstTime ? const OnboardingScreen() : const MainScreen(),
         loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
@@ -32,6 +35,17 @@ class LangTakeApp extends ConsumerWidget {
         '/main': (context) => const MainScreen(),
       },
     );
+  }
+
+  FontWeight _getFontWeight(int weight) {
+    switch (weight) {
+      case 500:
+        return FontWeight.w500;
+      case 700:
+        return FontWeight.w700;
+      default:
+        return FontWeight.w200;
+    }
   }
 }
 
