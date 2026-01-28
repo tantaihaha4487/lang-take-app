@@ -1,0 +1,49 @@
+name: Build Release Android APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build_release_android:
+    name: Build Android Release APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2.16.0
+        with:
+          channel: 'stable'
+
+      - run: flutter --version
+      - run: flutter pub get
+      - run: dart run flutter_launcher_icons:main
+
+      - name: Ensure gradle uses runner JAVA_HOME
+        run: |
+          if [ -f android/gradle.properties ]; then
+            if grep -q '^org.gradle.java.home=' android/gradle.properties; then
+              sed -i "s|^org.gradle.java.home=.*$|org.gradle.java.home=$JAVA_HOME|" android/gradle.properties
+            else
+              echo "org.gradle.java.home=$JAVA_HOME" >> android/gradle.properties
+            fi
+          fi
+        shell: bash
+
+      - name: Build Release APK
+        run: flutter build apk --release --dart-define=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} --dart-define=SHOW_RESET_ONBOARDING=${{ vars.SHOW_RESET_ONBOARDING }}
+
+      - name: Rename APK
+        run: mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/lang_take.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lang_take-release
+          path: build/app/outputs/flutter-apk/lang_take.apk
