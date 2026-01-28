@@ -4,8 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 final geminiServiceProvider = Provider<GeminiService>((ref) {
-  // TODO: Replace with actual API key mechanism (e.g. --dart-define or .env)
-  const apiKey = String.fromEnvironment('GEMINI_API_KEY');
+  const apiKey = String.fromEnvironment('GEMINI_API_KEY'); 
   return GeminiService(apiKey);
 });
 
@@ -15,8 +14,12 @@ class GeminiService {
 
   GeminiService(this.apiKey) {
     _model = GenerativeModel(
-      model: 'gemini-2.5-flash-lite',
+      model: 'gemini-2.5-flash', 
       apiKey: apiKey,
+      generationConfig: GenerationConfig(
+        responseMimeType: 'application/json',
+        temperature: 0.4,
+      ),
     );
   }
 
@@ -25,25 +28,23 @@ class GeminiService {
     String targetLanguage,
     String motherLanguage,
   ) async {
+    
     final promptText = '''
-        Analyze the image to identify the main subject/object.
-
-        1. Identify the name of the subject in "$targetLanguage".
-        2. Translate that specific meaning into "$motherLanguage".
-
-        CRITICAL TRANSLATION RULES:
-        - The value for "translation" MUST be written in the script/alphabet of "$motherLanguage".
-        - Do NOT simply copy the "$targetLanguage" word.
-        - If the word is a loanword, provide the standard transliteration in "$motherLanguage".
-
-        Return ONLY the raw JSON string (no markdown formatting):
-        {
-          "subject": "The name in $targetLanguage",
-          "translation": "The translation in $motherLanguage",
-          "language": "$targetLanguage"
-        }
+      You are an expert visual linguist.
+      
+      1. Analyze the image to identify the SINGLE main, dominant subject.
+      2. Identify the name of this subject in "$targetLanguage".
+      3. Translate that name into "$motherLanguage".
+      
+      RULES:
+      - The "translation" MUST use the native script of "$motherLanguage" (e.g. Thai Script, Kanji, Cyrillic).
+      - Return ONLY raw JSON matching this schema:
+      {
+         "subject": "String (Name in $targetLanguage)",
+         "translation": "String (Name in $motherLanguage)",
+         "language": "$targetLanguage"
+      }
     ''';
-
 
     final content = [
       Content.multi([
@@ -57,12 +58,7 @@ class GeminiService {
       final responseText = response.text;
 
       if (responseText != null) {
-        final cleanedText = responseText
-            .replaceAll('```json', '')
-            .replaceAll('```', '')
-            .trim();
-        
-        return jsonDecode(cleanedText) as Map<String, dynamic>;
+        return jsonDecode(responseText.trim()) as Map<String, dynamic>;
       }
       throw Exception('Empty response from Gemini');
     } catch (e) {

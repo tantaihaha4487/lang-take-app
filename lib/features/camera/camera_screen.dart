@@ -866,6 +866,14 @@ class _SettingsDialog extends ConsumerWidget {
       onSelectionChanged: (newSelection) {
         ref.read(fontWeightProvider.notifier).setWeight(newSelection.first);
       },
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Theme.of(ref.context).colorScheme.primaryContainer;
+          }
+          return Theme.of(ref.context).colorScheme.surfaceContainerHighest;
+        }),
+      ),
     );
   }
 
