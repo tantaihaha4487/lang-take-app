@@ -9,6 +9,7 @@ class SettingsService {
   static const String _appLanguageKey = 'app_language';
   static const String _isFirstTimeKey = 'is_first_time';
   static const String _fontWeightKey = 'font_weight';
+  static const String _themeModeKey = 'theme_mode';
 
 
 
@@ -68,6 +69,16 @@ class SettingsService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_fontWeightKey, weight);
   }
+
+  Future<bool> getIsLightMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_themeModeKey) ?? true;
+  }
+
+  Future<void> setIsLightMode(bool isLight) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_themeModeKey, isLight);
+  }
 }
 
 
@@ -112,6 +123,27 @@ class FontWeightNotifier extends StateNotifier<int> {
   Future<void> setWeight(int weight) async {
     await _settingsService.setFontWeight(weight);
     state = weight;
+  }
+}
+
+final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, bool>((ref) {
+  return ThemeModeNotifier(ref.read(settingsServiceProvider));
+});
+
+class ThemeModeNotifier extends StateNotifier<bool> {
+  final SettingsService _settingsService;
+
+  ThemeModeNotifier(this._settingsService) : super(true) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    state = await _settingsService.getIsLightMode();
+  }
+
+  Future<void> setLightMode(bool isLight) async {
+    await _settingsService.setIsLightMode(isLight);
+    state = isLight;
   }
 }
 

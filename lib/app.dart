@@ -18,13 +18,14 @@ class LangTakeApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final onboardingAsync = ref.watch(onboardingStatusProvider);
     final weightValue = ref.watch(fontWeightProvider);
+    final isLightMode = ref.watch(themeModeProvider);
 
     final fontWeight = _getFontWeight(weightValue);
 
     return MaterialApp(
       title: 'LangTake Mobile',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.getTheme(fontWeight),
+      theme: AppTheme.getTheme(fontWeight, isLightMode: isLightMode),
       home: onboardingAsync.when(
         data: (isFirstTime) => isFirstTime ? const OnboardingScreen() : const MainScreen(),
         loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),

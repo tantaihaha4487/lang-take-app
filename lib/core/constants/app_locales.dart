@@ -28,6 +28,7 @@ class AppLocale {
   final String translationLabel;
   final String resetOnboarding;
   final String fontWeightLabel;
+  final String themeLabel;
 
   AppLocale({
 
@@ -56,6 +57,7 @@ class AppLocale {
     required this.translationLabel,
     required this.resetOnboarding,
     required this.fontWeightLabel,
+    required this.themeLabel,
   });
 }
 
@@ -86,6 +88,7 @@ final Map<String, AppLocale> supportedLocales = {
     translationLabel: 'Translation',
     resetOnboarding: 'Reset Onboarding',
     fontWeightLabel: 'Font Weight',
+    themeLabel: 'Theme',
   ),
 
 
@@ -114,6 +117,7 @@ final Map<String, AppLocale> supportedLocales = {
     translationLabel: 'คำแปล',
     resetOnboarding: 'รีเซ็ตการตั้งค่าเริ่มต้น',
     fontWeightLabel: 'ความหนาของตัวอักษร',
+    themeLabel: 'ธีม',
   ),
 };
 

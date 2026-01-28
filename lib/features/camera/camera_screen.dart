@@ -771,6 +771,7 @@ class _SettingsDialog extends ConsumerWidget {
     final motherLang = ref.watch(motherLanguageProvider);
     final appLang = ref.watch(appLanguageProvider);
     final currentWeight = ref.watch(fontWeightProvider);
+    final isLightMode = ref.watch(themeModeProvider);
     final locale = ref.watch(appLocaleProvider);
     final config = ref.watch(appConfigProvider);
 
@@ -797,6 +798,10 @@ class _SettingsDialog extends ConsumerWidget {
           Text('${locale.fontWeightLabel}:'),
           const SizedBox(height: 8),
           _buildWeightSelector(ref, currentWeight),
+          const SizedBox(height: 16),
+          Text('${locale.themeLabel}:'),
+          const SizedBox(height: 8),
+          _buildThemeSelector(ref, isLightMode),
           if (config.showResetOnboarding) ...[
             const SizedBox(height: 24),
             const Divider(),
@@ -865,6 +870,27 @@ class _SettingsDialog extends ConsumerWidget {
       selected: {currentWeight},
       onSelectionChanged: (newSelection) {
         ref.read(fontWeightProvider.notifier).setWeight(newSelection.first);
+      },
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Theme.of(ref.context).colorScheme.primaryContainer;
+          }
+          return Theme.of(ref.context).colorScheme.surfaceContainerHighest;
+        }),
+      ),
+    );
+  }
+
+  Widget _buildThemeSelector(WidgetRef ref, bool isLightMode) {
+    return SegmentedButton<bool>(
+      segments: const [
+        ButtonSegment(value: false, label: Text('Dark'), icon: Icon(Icons.dark_mode)),
+        ButtonSegment(value: true, label: Text('Light'), icon: Icon(Icons.light_mode)),
+      ],
+      selected: {isLightMode},
+      onSelectionChanged: (newSelection) {
+        ref.read(themeModeProvider.notifier).setLightMode(newSelection.first);
       },
       style: ButtonStyle(
         backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
