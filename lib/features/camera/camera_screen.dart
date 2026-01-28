@@ -747,16 +747,24 @@ class _CameraBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0F2027),
-            Color(0xFF203A43),
-            Color(0xFF2C5364),
-          ],
+          colors: isLight
+              ? [
+                  const Color(0xFFE8F4F8),
+                  const Color(0xFFD4E8EF),
+                  const Color(0xFFC0DCE5),
+                ]
+              : [
+                  const Color(0xFF0F2027),
+                  const Color(0xFF203A43),
+                  const Color(0xFF2C5364),
+                ],
         ),
       ),
     );

@@ -97,6 +97,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Widget _buildProgressIndicator() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(3, (index) {
@@ -107,7 +108,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           height: 8,
           width: isSelected ? 24 : 8,
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.white.withOpacity(0.3),
+            color: isSelected ? colorScheme.primary : colorScheme.onSurface.withOpacity(0.3),
             borderRadius: BorderRadius.circular(4),
           ),
         );
@@ -120,6 +121,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     String? subtitle,
     required Widget content,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -128,7 +130,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           Text(
             title,
             style: TextStyle(
-              color: Colors.white,
+              color: colorScheme.onSurface,
               fontSize: 28,
               fontWeight: Theme.of(context).textTheme.displayLarge?.fontWeight,
               letterSpacing: -0.5,
@@ -140,7 +142,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Text(
               subtitle,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.6),
+                color: colorScheme.onSurface.withOpacity(0.6),
                 fontSize: 16,
               ),
               textAlign: TextAlign.center,
@@ -234,15 +236,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return InteractiveGlassContainer(
       onTap: onTap,
       borderRadius: 20,
       blur: 15,
-      // Performance optimization: only use blur for selected item or if it's the first step
       useBlur: isSelected || _currentPage == 0,
-      color: isSelected ? Colors.white.withOpacity(0.25) : Colors.white.withOpacity(0.05),
+      color: isSelected ? colorScheme.primary.withOpacity(0.25) : colorScheme.onSurface.withOpacity(0.05),
       border: Border.all(
-        color: isSelected ? Colors.white.withOpacity(0.5) : Colors.white.withOpacity(0.1),
+        color: isSelected ? colorScheme.primary.withOpacity(0.5) : colorScheme.onSurface.withOpacity(0.1),
         width: isSelected ? 2 : 1,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -256,14 +258,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           Text(
             lang.name,
             style: TextStyle(
-              color: Colors.white,
+              color: colorScheme.onSurface,
               fontSize: 18,
               fontWeight: isSelected ? Theme.of(context).textTheme.bodyLarge?.fontWeight : FontWeight.normal,
             ),
           ),
           const Spacer(),
           if (isSelected)
-            const Icon(Icons.check_circle, color: Colors.white, size: 24),
+            Icon(Icons.check_circle, color: colorScheme.primary, size: 24),
         ],
       ),
     );
@@ -271,6 +273,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Widget _buildBottomControls() {
     final locale = ref.read(appLocaleProvider);
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
@@ -283,12 +286,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 curve: Curves.easeInOutCubic,
               ),
               borderRadius: 20,
-              useBlur: false, // Optimization for buttons
+              useBlur: false,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Text(
                 locale.back,
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: colorScheme.onSurface.withOpacity(0.7),
                   fontWeight: Theme.of(context).textTheme.bodyLarge?.fontWeight,
                 ),
               ),
@@ -299,13 +302,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           InteractiveGlassContainer(
             onTap: _nextPage,
             borderRadius: 20,
-            useBlur: false, // Optimization for buttons
-            color: Colors.white,
+            useBlur: false,
+            color: colorScheme.primary,
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
             child: Text(
               _currentPage == 2 ? locale.getStarted : locale.next,
               style: TextStyle(
-                color: Colors.black,
+                color: colorScheme.onPrimary,
                 fontWeight: Theme.of(context).textTheme.bodyLarge?.fontWeight,
                 fontSize: 16,
               ),
@@ -317,21 +320,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 }
 
-class _BackgroundGradient extends StatelessWidget {
+class _BackgroundGradient extends ConsumerWidget {
   const _BackgroundGradient();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0F2027),
-            Color(0xFF203A43),
-            Color(0xFF2C5364),
-          ],
+          colors: isLight
+              ? [
+                  const Color(0xFFE8F4F8),
+                  const Color(0xFFD4E8EF),
+                  const Color(0xFFC0DCE5),
+                ]
+              : [
+                  const Color(0xFF0F2027),
+                  const Color(0xFF203A43),
+                  const Color(0xFF2C5364),
+                ],
         ),
       ),
     );
