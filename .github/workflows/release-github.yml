@@ -1,4 +1,4 @@
-name: Release Android APK Github
+name: Release Android APK
 
 on:
   push:
@@ -8,14 +8,13 @@ on:
 
 jobs:
   release_android:
-    name: Build & Release Android APK
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write   # สำคัญมาก สำหรับ upload release asset
+      contents: write   # จำเป็นสำหรับ GitHub Release
 
     steps:
-      - name: Checkout source
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Java 17
@@ -56,7 +55,9 @@ jobs:
           mv build/app/outputs/flutter-apk/app-release.apk \
              build/app/outputs/flutter-apk/lang_take-${{ github.ref_name }}.apk
 
-      - name: Create GitHub Release
+      - name: Create GitHub Release & Upload APK
         uses: softprops/action-gh-release@v2
         with:
+          name: LangTake ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
           files: build/app/outputs/flutter-apk/lang_take-${{ github.ref_name }}.apk
