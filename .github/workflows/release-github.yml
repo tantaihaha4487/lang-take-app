@@ -1,0 +1,62 @@
+name: Release Android APK Github
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  release_android:
+    name: Build & Release Android APK
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write   # สำคัญมาก สำหรับ upload release asset
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate launcher icons
+        run: dart run flutter_launcher_icons:main
+
+      - name: Ensure Gradle uses JAVA_HOME
+        run: |
+          if [ -f android/gradle.properties ]; then
+            if grep -q '^org.gradle.java.home=' android/gradle.properties; then
+              sed -i "s|^org.gradle.java.home=.*$|org.gradle.java.home=$JAVA_HOME|" android/gradle.properties
+            else
+              echo "org.gradle.java.home=$JAVA_HOME" >> android/gradle.properties
+            fi
+          fi
+
+      - name: Build Android Release APK
+        run: |
+          flutter build apk --release \
+            --dart-define=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
+            --dart-define=SHOW_RESET_ONBOARDING=${{ vars.SHOW_RESET_ONBOARDING }}
+
+      - name: Rename APK
+        run: |
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/lang_take-${{ github.ref_name }}.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/app/outputs/flutter-apk/lang_take-${{ github.ref_name }}.apk
