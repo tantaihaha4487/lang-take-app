@@ -58,6 +58,6 @@ jobs:
       - name: Create GitHub Release & Upload APK
         uses: softprops/action-gh-release@v2
         with:
-          name: LangTake ${{ github.ref_name }}
+          name: LangTake ${{ github.ref_name }} test
           tag_name: ${{ github.ref_name }}
           files: build/app/outputs/flutter-apk/lang_take-${{ github.ref_name }}.apk
