@@ -1,100 +1,95 @@
-# 📸 LangTake Mobile
+# LangTake Mobile
 
-**LangTake** is a premium, AI-powered language learning application that turns your camera into a personal language tutor. Simply point, capture, and learn the names of objects in your target language with instant translations and native pronunciation.
+**LangTake** is a cross-platform mobile application designed to facilitate vocabulary acquisition through visual object recognition. By integrating the Google Gemini API with mobile camera hardware, the application analyzes real-world objects and provides immediate translations and pronunciation guides in the user's target language.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Flutter](https://img.shields.io/badge/flutter-v3.10+-02569B.svg?logo=flutter)
-![AI](https://img.shields.io/badge/AI-Gemini-orange.svg)
 
 ---
 
-## ✨ Key Features
+## Project Overview
 
-- **💎 Premium Glassmorphism UI**: A stunning, modern interface with interactive "liquid glass" elements and smooth animations.
-- **🤖 AI Object Identification**: Powered by Google Gemini AI to accurately identify objects from your camera or gallery.
-- **🗣️ Native Pronunciation**: Integrated Text-to-Speech (TTS) to help you master the pronunciation of every new word.
-- **🇹🇭 Multi-Language Support**: Full UI support for **English** and **Thai**, with easy extensibility for more languages.
-- **🖼️ Integrated Album**: A beautiful collection view to manage and review your learning history.
-- **🚀 Seamless Onboarding**: A personalized first-time setup experience to tailor the app to your native and target languages.
-- **🖋️ Modern Typography**: Uses the elegant **Kanit** font with an ultra-light aesthetic (Weight 200).
+This application serves as a technical demonstration of integrating Generative AI with mobile frontend frameworks. The core functionality allows users to capture images or upload files from their gallery, which are then processed to identify the primary subject. The system returns the object's name in the selected target language, accompanied by audio playback for pronunciation verification.
 
----
+### Core Functionality
 
-## 🛠️ Tech Stack
-
-- **Framework**: [Flutter](https://flutter.dev/)
-- **State Management**: [Riverpod](https://riverpod.dev/)
-- **AI Engine**: [Google Generative AI (Gemini)](https://ai.google.dev/)
-- **Local Database**: [Hive](https://docs.hivedb.dev/) (High-performance NoSQL)
-- **Persistence**: [Shared Preferences](https://pub.dev/packages/shared_preferences)
-- **Typography**: [Google Fonts (Kanit)](https://fonts.google.com/specimen/Kanit)
+* **Object Recognition:** Utilizes Google Gemini (Generative AI) to analyze image data and extract semantic meaning.
+* **User Interface:** Implements a glassmorphism design system, utilizing custom shaders and animations for a responsive user experience.
+* **Text-to-Speech (TTS):** Integrated audio synthesis to provide phonetic references for identified vocabulary.
+* **Data Persistence:** Uses a local NoSQL database to store user history and image metadata.
+* **Localization:** Built with an adaptable internationalization (i18n) architecture; currently supports English and Thai.
 
 ---
 
-## 🚀 Getting Started
+## Technical Specifications
+
+The application is built using the Flutter framework, prioritizing strict state management and modular architecture.
+
+* **Framework:** Flutter (Dart)
+* **State Management:** Riverpod
+* **AI Service:** Google Generative AI SDK (Gemini)
+* **Local Storage:** Hive (NoSQL)
+* **Key-Value Store:** Shared Preferences
+* **Typography:** Kanit (Google Fonts)
+
+---
+
+## Installation and Setup
+
+Follow the instructions below to set up the development environment.
 
 ### Prerequisites
 
-- Flutter SDK (v3.10 or higher)
-- A Google Gemini API Key ([Get one here](https://aistudio.google.com/app/apikey))
+* **Flutter SDK:** Version 3.10 or higher.
+* **API Credentials:** A valid Google Gemini API Key.
 
-### Installation
+### Build Instructions
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/your-username/lang-take.git
-   cd lang-take
-   ```
+1.  **Clone the Repository**
+    ```bash
+    git clone [https://github.com/your-username/lang-take.git](https://github.com/your-username/lang-take.git)
+    cd lang-take
+    ```
 
-2. **Install dependencies**:
-   ```bash
-   flutter pub get
-   ```
+2.  **Install Dependencies**
+    Retrieve the required packages from pub.dev.
+    ```bash
+    flutter pub get
+    ```
 
-3. **Configuration**:
-   Create a `config.json` file in the root directory of the project:
-   ```json
-   {
-     "GEMINI_API_KEY": "YOUR_GEMINI_API_KEY_HERE",
-     "SHOW_RESET_ONBOARDING": false
-   }
-   ```
-   *Note: `SHOW_RESET_ONBOARDING` defaults to `false`. Set it to `true` if you want to see the "Reset Onboarding" button in the settings menu for debugging.*
+3.  **Environment Configuration**
+    To secure sensitive keys, the application requires a configuration file. Create a file named `config.json` in the project root directory:
 
-### Running the App
+    ```json
+    {
+      "GEMINI_API_KEY": "YOUR_GEMINI_API_KEY_HERE",
+      "SHOW_RESET_ONBOARDING": false
+    }
+    ```
 
-Run the application using the configuration file:
+    > **Note:** The `SHOW_RESET_ONBOARDING` flag is used for debugging the first-run experience. Set to `true` to expose reset controls in the settings menu.
 
-```bash
-flutter run -d linux --dart-define-from-file=config.json
-```
-*(Replace `linux` with `android`, `ios`, or your desired device ID)*
+4.  **Execution**
+    Run the application, passing the configuration file as a build argument.
 
----
-
-## ⚙️ Configuration Flags
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `GEMINI_API_KEY` | String | N/A | Your Google Gemini API Key (Required). |
-| `SHOW_RESET_ONBOARDING` | Boolean | `false` | Toggles the visibility of the "Reset Onboarding" button in Settings. |
+    ```bash
+    flutter run -d [device_id] --dart-define-from-file=config.json
+    ```
+    *Replace `[device_id]` with your target platform (e.g., `android`, `ios`, `linux`).*
 
 ---
 
-## 🌍 Supported Languages
+## Configuration Reference
 
-Currently, the UI supports:
-- 🇺🇸 English
-- 🇹🇭 Thai (ภาษาไทย)
+The application relies on the following build-time configuration flags:
 
-The AI can identify objects and translate them into dozens of languages supported by the Gemini engine.
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+| Key | Type | Description |
+| :--- | :--- | :--- |
+| **GEMINI_API_KEY** | String | **Required.** The authentication key for the Google Gemini API. |
+| **SHOW_RESET_ONBOARDING** | Boolean | **Optional.** Defaults to `false`. Enables debug controls for the onboarding flow. |
 
 ---
 
-*Developed with ❤️ by the LangTake Team.*
+## License
+
+This software is distributed under the MIT License. Please refer to the [LICENSE](LICENSE) file for full legal text and usage permissions.
