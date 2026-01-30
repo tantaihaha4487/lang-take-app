@@ -1,0 +1,41 @@
+name: Release Windows
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  release_windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      
+      - name: Install dependencies
+        run: flutter pub get
+      
+      - name: Build Windows Release
+        run: |
+          flutter build windows --release `
+            --dart-define=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} `
+            --dart-define=SHOW_RESET_ONBOARDING=${{ vars.SHOW_RESET_ONBOARDING }}
+      
+      - name: Create Windows ZIP
+        run: |
+          Compress-Archive -Path build/windows/x64/runner/Release/* `
+            -DestinationPath lang_take-${{ github.ref_name }}-windows.zip
+      
+      - name: Create GitHub Release & Upload ZIP
+        uses: softprops/action-gh-release@v2
+        with:
+          name: LangTake ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          files: lang_take-${{ github.ref_name }}-windows.zip
