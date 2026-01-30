@@ -14,9 +14,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       
-      - name: Setup CMake
-        uses: lukka/get-cmake@latest
-      
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -25,8 +22,10 @@ jobs:
       - name: Enable Windows Desktop
         run: flutter config --enable-windows-desktop
       
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Upgrade dependencies
+        run: |
+          flutter pub upgrade flutter_tts
+          flutter pub get
       
       - name: Clean build
         run: flutter clean
